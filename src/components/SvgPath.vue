@@ -1,5 +1,5 @@
 <template>
-  <path :class="{active: isActive}" :d="dToString" fill="none" @click="handleClick" :transform="transform"></path>
+  <path :class="{active: isActive}" :d="dToString" fill="none" @click="handleClick" :transform="transform" ref="path"></path>
 </template>
 
 <script>
@@ -32,7 +32,7 @@ export default {
     transform: function() {
       let t = '';
       if(this.path.rotation) {
-        t += 'rotate(' + this.path.rotation + ')';
+        t += `rotate(${this.path.rotation} ${this.path.rotationCenter.x} ${this.path.rotationCenter.y})`;
       }
       return t;
     }
@@ -42,7 +42,10 @@ export default {
       this.store.selectPath(this.id, this.index)
       
     }
-  }
+  },
+  beforeUpdate: function() {
+    this.store.updatePathCenter(this.$refs.path.getBBox())
+  },
 };
 </script>
 

@@ -1,7 +1,7 @@
 <template>
   <div>tbd right panel
-    <div v-if="store.state.selectedPathIndex">
-      <input @change="rotate" :value="getRotation">
+    <div v-if="store.state.selectedPathIndex != null">
+      <input v-model.number="rotate" type="number">
     </div>
   </div>
 </template>
@@ -14,19 +14,17 @@ export default {
   data: function() {
     return {
       store
-    };
-  },
-  methods: {
-    rotate: function(event) {
-      if (!this.store.state.selectedPathIndex) return;
-      this.store.state.allPaths[this.store.state.selectedPathIndex].rotation = event.target.value;
     }
-  }
-  ,
+  },
   computed: {
-    getRotation: function() {
-      if (!this.store.state.selectedPathIndex) return;
-      return this.store.state.allPaths[this.store.state.selectedPathIndex].rotation || 0;
+    rotate: {
+      get() {
+        return this.store.state.allPaths[store.state.selectedPathIndex].rotation;
+      },
+      set(val) {
+        this.store.state.allPaths[store.state.selectedPathIndex].rotation = val;
+        this.store.updateRotationCenter();
+      }
     }
   }
 };

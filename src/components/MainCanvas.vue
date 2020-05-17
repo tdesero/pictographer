@@ -8,7 +8,7 @@
 
       <g v-for="path in store.state.allPaths" :key="'g-' + path.id" :class="{active: path.id === store.state.selectedPathId}" :transform="transform(path)">
         <!-- dest points -->
-        <circle 
+        <circle
           v-for="segment in path.definition" 
           @mousedown="startPointMove(segment.id, 'dest')"
           :cx="segment.dest.x" 
@@ -54,16 +54,20 @@ export default {
   methods: {
     handleMouseDown: function(event) {
       let pathId = this.store.state.selectedPathId;
+      
       this.store.handleMouseDown(event, this.$refs[pathId][0].$el);
     },
     handleMouseMove: function(event) {
       let pathId = this.store.state.selectedPathId;
-      this.store.handleMouseMove(event, this.$refs[pathId][0].$el);
+
+      if (pathId) {
+        this.store.handleMouseMove(event, this.$refs[pathId][0].$el);
+      }
     },
     transform: function(path) {
       let t = '';
-      if(path.rotation) {
-        t += 'rotate(' + path.rotation + ')';
+      if(path && path.rotation) {
+        t += `rotate(${path.rotation} ${path.rotationCenter.x} ${path.rotationCenter.y})`;
       }
       return t;
     },
@@ -85,6 +89,7 @@ export default {
   width: 100%;
   max-height: 500px;
   max-width: 500px;
+  overflow: visible;
 }
 
 g.active {

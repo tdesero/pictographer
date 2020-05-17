@@ -19,6 +19,9 @@ export default {
   data: function() {
     return { store };
   },
+  created: function() {
+    this.store.createPath();
+  },
   components: {
     LeftPanel,
     RightPanel,

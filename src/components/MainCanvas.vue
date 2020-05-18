@@ -6,11 +6,12 @@
       class="v_app-canvas absolute-center shadow" stroke="black" viewBox="0 0 100 100">
       <SvgPath v-for="(path, index) in store.state.allPaths" :definition="path.definition" :path="path" :key="path.id" :id="path.id" :index="index" :ref="path.id"></SvgPath>
 
-      <g v-for="path in store.state.allPaths" :key="'g-' + path.id" :class="{active: path.id === store.state.selectedPathId}" :transform="transform(path)">
+      <g v-for="(path, index) in store.state.allPaths" :key="'g-' + path.id" :class="{active: path.id === store.state.selectedPathId}" :transform="transform(path)">
         <!-- dest points -->
         <circle
           v-for="segment in path.definition" 
           @mousedown="startPointMove(segment.id, 'dest')"
+          @click="selectPath(path.id, index)"
           :cx="segment.dest.x" 
           :cy="segment.dest.y" 
           r="2" 
@@ -18,7 +19,8 @@
           ></circle>
       </g>
       <path 
-        v-if="store.state.tool === 'PEN'"
+        id="live-preview-path"
+        v-if="hasLivePreview"
         :d="livePreview" 
         stroke="blue" 
         :transform="transform(store.state.allPaths[store.state.selectedPathIndex])"
@@ -42,6 +44,9 @@ export default {
     SvgPath
   },
   computed: {
+    hasLivePreview: function() {
+      return ( !store.state.isFirstPoint && store.state.tool === 'PEN')
+    },
     livePreview: function() {
       const {currentPoint, livePreviewSegment} = this.store.state;
       let d = ''
@@ -55,7 +60,9 @@ export default {
     handleMouseDown: function(event) {
       let pathId = this.store.state.selectedPathId;
       
-      this.store.handleMouseDown(event, this.$refs[pathId][0].$el);
+      if (pathId) {
+        this.store.handleMouseDown(event, this.$refs[pathId][0].$el);
+      }
     },
     handleMouseMove: function(event) {
       let pathId = this.store.state.selectedPathId;
@@ -63,6 +70,9 @@ export default {
       if (pathId) {
         this.store.handleMouseMove(event, this.$refs[pathId][0].$el);
       }
+    },
+    selectPath: function (id, index) {
+      this.store.selectPath(id, index);
     },
     transform: function(path) {
       let t = '';

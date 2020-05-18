@@ -39,13 +39,28 @@ export default {
   },
   methods: {
     handleClick: function() {
-      this.store.selectPath(this.id, this.index)
-      
+      this.store.selectPath(this.id, this.index);
     }
   },
   beforeUpdate: function() {
-    this.store.updatePathCenter(this.$refs.path.getBBox())
+    if ( this.isActive ) {
+      this.store.updatePathCenter(this.$refs.path.getBBox())
+    }
   },
+  updated: function() {
+    let { selectedPathId } = this.store.state;
+
+    if (this.id === selectedPathId && !(window.SELECTED_PATH === this.$refs.path)) {
+      window.SELECTED_PATH = this.$refs.path;
+    }
+  },
+  created: function() {
+    let { selectedPathId } = this.store.state;
+
+    if (this.id === selectedPathId && !(window.SELECTED_PATH === this.$refs.path)) {
+      window.SELECTED_PATH = this.$refs.path;
+    }
+  }
 };
 </script>
 

@@ -1,7 +1,7 @@
 <template>
   <div class="v_left-panel absolute-y-center p-5 text-center">
     <button
-      @click="store.createPath()"
+      @click="newPath"
       class="btn btn-primary btn btn-primary btn-circle btn-xl"
     >new</button>
     <button
@@ -29,6 +29,12 @@ export default {
     return {
       store
     };
+  },
+  methods: {
+    newPath: function() {
+      this.store.createPath();
+      this.store.selectTool('PEN');
+    }
   }
 };
 </script>

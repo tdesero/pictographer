@@ -22,8 +22,7 @@ export default {
         return this.store.state.allPaths[store.state.selectedPathIndex].rotation;
       },
       set(val) {
-        this.store.state.allPaths[store.state.selectedPathIndex].rotation = val;
-        this.store.updateRotationCenter();
+        this.store.updateRotation(val)
       }
     }
   }

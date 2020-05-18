@@ -1,24 +1,6 @@
-/*const testPaths = [
-  {
-    id: 1,
-    rotation: 10,
-    definition: [
-      { id: 1, type: "M", dest: { x: 10, y: 10 } },
-      { id: 2, type: "L", dest: { x: 8, y: 15 } },
-      { id: 3, type: "L", dest: { x: 2, y: 0 } }
-    ]
-  },
-  {
-    id: 2,
-    rotation: null,
-    definition: [
-      { id: 4, type: "M", dest: { x: 17, y: 90 } },
-      { id: 5, type: "L", dest: { x: 87, y: 15 } },
-      { id: 6, type: "L", dest: { x: 20, y: 5 } }
-    ]
-  }
-];*/
+import Vue from 'vue';
 
+window.SELECTED_PATH = {};
 
 function emptyPath() {
   return {
@@ -33,6 +15,8 @@ function emptyPath() {
 const store = {
   debug: true,
   state: {
+    history: [],
+    historyPos: -1, // -1 means history is not active
     allPaths: [],
     selectedPathIndex: null,
     selectedPathId: null,
@@ -45,6 +29,7 @@ const store = {
     selectedPointIndex: null,
     movePoint: false,
     svgPoint: {},
+    isFirstPoint: true,
   },
 
   /**
@@ -57,6 +42,9 @@ const store = {
     this.state.allPaths.push(emptyPath());
     this.state.selectedPathIndex = this.state.allPaths.length - 1;
     this.state.selectedPathId = this.state.allPaths[this.state.selectedPathIndex].id;
+
+    /* clear currentPoint */
+    this.state.isFirstPoint = true;
 
     if (this.debug) console.log("index:", this.state.selectedPathIndex);
     if (this.debug) console.log("id:", this.state.selectedPathId);
@@ -72,9 +60,7 @@ const store = {
     if (this.debug) console.log("selectTool", tool);
     this.state.tool = tool;
 
-    console.log(tool)
     if (tool === 'PEN' && this.state.selectedPathIndex === null) {
-      console.log('hae?')
       this.createPath();
     }
   },
@@ -146,6 +132,10 @@ const store = {
   handleMouseUp() {
     let {allPaths, selectedPathIndex, selectedPointIndex} = this.state;
 
+    if (this.state.movePoint) {
+      this.historySnapshot()
+    }
+
     this.state.movePoint = false;
 
     if (selectedPathIndex !== null && selectedPointIndex !== null) {
@@ -207,13 +197,26 @@ const store = {
       this.state.selectedPointId = id;
       this.state.selectedPointIndex = 0;
     } 
+
+    this.state.isFirstPoint = false;
+    this.historySnapshot();
   },
 
   deleteSegment() {
     if (this.debug) console.log("deleteSegment");
-    if (this.state.selectedPointIndex) {
-      console.log(this.state.allPaths[this.state.selectedPathIndex].definition[this.state.selectedPointIndex])
-      delete this.state.allPaths[this.state.selectedPathIndex].definition.splice(this.state.selectedPointIndex, 1);
+
+    let {selectedPointIndex, selectedPathIndex} = this.state;
+
+    if (selectedPointIndex !== null) {
+      if ( selectedPointIndex === 0 ) {
+
+        if (this.state.allPaths[selectedPathIndex].length > 1) {
+          /* make the first point moveto ('M') instead of lineto ('L') */
+          this.state.allPaths[selectedPathIndex].definition[1].type = 'M';
+        }
+        
+      }
+      this.state.allPaths[selectedPathIndex].definition.splice(this.state.selectedPointIndex, 1);
 
       /* clear selected path */
       this.state.selectedPointIndex = null;
@@ -250,10 +253,53 @@ const store = {
     this.state.allPaths[this.state.selectedPathIndex].center = center;
   },
 
+  updateRotation(val) {
+    this.state.allPaths[store.state.selectedPathIndex].rotation = val;
+    this.updateRotationCenter();
+    this.state.transformMatrix = window.SELECTED_PATH.getScreenCTM().inverse();
+  },
+
   updateRotationCenter() {
     let center = this.state.allPaths[this.state.selectedPathIndex].center;
     this.state.allPaths[this.state.selectedPathIndex].rotationCenter = center;
-  }
+  },
+
+  historySnapshot() {
+    if (this.debug) console.log("historySnapshot");
+
+    /* first reset the history position and clear all history arrays smaller then the current historyPos */
+    if (this.state.historyPos > -1) {
+      this.state.history.splice(0, this.state.historyPos + 1);
+      console.log('snapshot clear', this.state.history)
+      this.state.historyPos = -1;
+    }
+    
+
+    const copiedPaths = JSON.parse(JSON.stringify(this.state.allPaths));
+    this.state.history.unshift( copiedPaths );
+  },
+
+  setHistoryPos(val) {
+    if (this.debug) console.log("setHistoryPos", val);
+
+    this.state.historyPos += val;
+  },
+
+  historyGoTo( count = 0 ) {
+    if (this.debug) console.log("historyGoTo", count);
+    Vue.set(this.state, 'allPaths', JSON.parse(JSON.stringify(this.state.history[count + 1])) );
+
+    /* after time traveling selected elements have to be reset, because it is possible that they don't exist. */
+    this.selectTool(this.state.tool);
+    this.state.selectedPathIndex = null;
+    this.state.selectedPathId = null;
+    this.state.currentPoint = {};
+    this.state.livePreviewSegment = {};
+    this.state.selectedPointId = null;
+    this.state.selectedPointStep = null;
+    this.state.selectedPointIndex = null;
+    this.state.isFirstPoint = true;
+  },
 
 };
 

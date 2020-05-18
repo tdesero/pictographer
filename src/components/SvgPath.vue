@@ -22,7 +22,7 @@ export default {
     dToString: function() {
       let d = "";
       this.definition.forEach(s => {
-        d += [s.type, s.dest.x, s.dest.y].join(' ');
+        d += [s.type, s.curve1.x, s.curve1.y, s.curve2.x, s.curve2.y, s.dest.x, s.dest.y].join(' ');
       });
       return d;
     },

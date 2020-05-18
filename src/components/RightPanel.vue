@@ -1,7 +1,12 @@
 <template>
   <div>tbd right panel
     <div v-if="store.state.selectedPathIndex != null">
+      rotation
       <input v-model.number="rotate" type="number">
+      snap to grid
+      <input v-model="store.state.snapToGrid" type="checkbox">
+      hide controls
+      <input v-model="store.state.hideControls" type="checkbox">
     </div>
   </div>
 </template>

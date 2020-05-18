@@ -12,6 +12,14 @@ function emptyPath() {
   }
 }
 
+function roundPoint(point) {
+  let newPoint = {}
+  newPoint.x = Math.round(point.x);
+  newPoint.y = Math.round(point.y);
+
+  return newPoint;
+}
+
 const store = {
   debug: true,
   state: {
@@ -30,6 +38,10 @@ const store = {
     movePoint: false,
     svgPoint: {},
     isFirstPoint: true,
+    isDrawing: false,
+    currentSegment: 'L',
+    snapToGrid: true,
+    hideControls: false,
   },
 
   /**
@@ -86,6 +98,7 @@ const store = {
 
     switch(this.state.tool) {   
       case 'PEN':
+        this.state.isDrawing = true;
         if( (pathLength - 1) === selectedPointIndex) {
           if (this.debug) console.log('end')
           this.addSegment(event, 'END');
@@ -114,7 +127,25 @@ const store = {
       point.x = event.clientX;
       point.y = event.clientY;
       point = point.matrixTransform(this.state.transformMatrix);
+      if (this.state.snapToGrid) { point = roundPoint(point) }
+
       this.state.livePreviewSegment = {type: 'L', dest: {x: point.x, y: point.y}};
+    }
+
+    /* Draw Bezier */
+    if (this.state.tool === 'PEN' && this.state.isDrawing) {
+      let { allPaths, selectedPathIndex, selectedPointIndex, snapToGrid } = this.state;
+      let fromPoint = allPaths[selectedPathIndex].definition[selectedPointIndex - 1].dest;
+
+      let point = this.state.svgPoint;
+      point.x = event.clientX;
+      point.y = event.clientY;
+      point = point.matrixTransform(this.state.transformMatrix);
+      if (snapToGrid) { point = roundPoint(point) }
+
+      allPaths[selectedPathIndex].definition[selectedPointIndex].type = 'C';
+      allPaths[selectedPathIndex].definition[selectedPointIndex].curve1 = { x: fromPoint.x, y: fromPoint.y };
+      allPaths[selectedPathIndex].definition[selectedPointIndex].curve2 = { x: point.x, y: point.y}
     }
 
     /* moving point */
@@ -123,6 +154,7 @@ const store = {
       point.x = event.clientX;
       point.y = event.clientY;
       point = point.matrixTransform(this.state.transformMatrix);
+      if (this.state.snapToGrid) { point = roundPoint(point) }
 
       /* this moves the current selected point */
       this.state.allPaths[this.state.selectedPathIndex].definition[this.state.selectedPointIndex][this.state.selectedPointStep] = {x: point.x, y: point.y};
@@ -137,6 +169,8 @@ const store = {
     }
 
     this.state.movePoint = false;
+
+    this.state.isDrawing = false;
 
     if (selectedPathIndex !== null && selectedPointIndex !== null) {
       this.state.currentPoint = allPaths[selectedPathIndex].definition[selectedPointIndex].dest;
@@ -154,6 +188,8 @@ const store = {
     point.x = event.clientX;
     point.y = event.clientY;
     point = point.matrixTransform(this.state.transformMatrix);
+    if (this.state.snapToGrid) { point = roundPoint(point) }
+
     this.state.currentPoint = {x: point.x, y: point.y};
 
     if (where === 'END') {
@@ -162,6 +198,8 @@ const store = {
       allPaths[selectedPathIndex].definition.push({
         type: 'L',
         id: id,
+        curve1: {},
+        curve2: {},
         dest: {
           x: point.x,
           y: point.y
@@ -176,6 +214,8 @@ const store = {
       allPaths[selectedPathIndex].definition.unshift({
         type: 'M',
         id: id,
+        curve1: {},
+        curve2: {},
         dest: {
           x: point.x,
           y: point.y
@@ -183,17 +223,21 @@ const store = {
       })
       allPaths[selectedPathIndex].definition[selectedPointIndex + 1].type = 'L';
       this.state.selectedPointId = id;
+      this.state.isDrawing = false;
     }
     if ( where === "NEW" ) {
       let id = Date.now();
       this.state.allPaths[this.state.selectedPathIndex].definition.push({
         type: 'M',
         id: id,
+        curve1: {},
+        curve2: {},
         dest: {
           x: point.x,
           y: point.y
         }
       })
+      this.state.isDrawing = false;
       this.state.selectedPointId = id;
       this.state.selectedPointIndex = 0;
     } 

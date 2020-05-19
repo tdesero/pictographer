@@ -1,5 +1,13 @@
 <template>
-  <path :class="{active: isActive}" :d="dToString" fill="none" @click="handleClick" :transform="transform" ref="path"></path>
+  <path 
+    :class="{active: isActive}" 
+    :d="dToString" 
+    fill="none" 
+    @click="handleClick" 
+    :transform="transform" 
+    :stroke-linecap="path.strokeLinecap"
+    ref="path"
+    ></path>
 </template>
 
 <script>

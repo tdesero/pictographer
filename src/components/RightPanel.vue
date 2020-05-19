@@ -7,6 +7,11 @@
       <input v-model="store.state.snapToGrid" type="checkbox">
       hide controls
       <input v-model="store.state.hideControls" type="checkbox">
+      <select v-model="strokeLinecap">
+        <option value="round">round</option>
+        <option value="butt">butt</option>
+        <option value="square">square</option>
+      </select>
     </div>
   </div>
 </template>
@@ -27,7 +32,15 @@ export default {
         return this.store.state.allPaths[store.state.selectedPathIndex].rotation;
       },
       set(val) {
-        this.store.updateRotation(val)
+          this.store.updateRotation(val)
+      }
+    },
+    strokeLinecap: {
+      get() {
+        return this.store.state.allPaths[store.state.selectedPathIndex].strokeLinecap;
+      },
+      set(val) {
+        this.store.setStrokeLinecap(val)
       }
     }
   }

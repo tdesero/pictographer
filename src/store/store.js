@@ -8,7 +8,8 @@ function emptyPath() {
     definition: [],
     rotation: null,
     center: {},
-    rotationCenter: {}
+    rotationCenter: {},
+    strokeLinecap: 'butt',
   }
 }
 
@@ -42,6 +43,7 @@ const store = {
     currentSegment: 'L',
     snapToGrid: true,
     hideControls: false,
+    viewBox: {x: 30, y: 30}
   },
 
   /**
@@ -266,6 +268,7 @@ const store = {
       this.state.selectedPointIndex = null;
       this.state.selectedPointId = null;
     }
+    this.historySnapshot();
   },
 
   selectPath(id, index) {
@@ -301,6 +304,7 @@ const store = {
     this.state.allPaths[store.state.selectedPathIndex].rotation = val;
     this.updateRotationCenter();
     this.state.transformMatrix = window.SELECTED_PATH.getScreenCTM().inverse();
+    this.historySnapshot();
   },
 
   updateRotationCenter() {
@@ -317,7 +321,6 @@ const store = {
       console.log('snapshot clear', this.state.history)
       this.state.historyPos = -1;
     }
-    
 
     const copiedPaths = JSON.parse(JSON.stringify(this.state.allPaths));
     this.state.history.unshift( copiedPaths );
@@ -344,6 +347,11 @@ const store = {
     this.state.selectedPointIndex = null;
     this.state.isFirstPoint = true;
   },
+
+  setStrokeLinecap(str) {
+    const { selectedPathIndex } = this.state;
+    this.state.allPaths[selectedPathIndex].strokeLinecap = str;
+  }
 
 };
 

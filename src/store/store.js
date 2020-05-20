@@ -7,8 +7,10 @@ function emptyPath() {
     id: new Date().getTime(),
     definition: [],
     rotation: null,
+    scale: {x: 1, y: 1},
     center: {},
     rotationCenter: {},
+    translate: {x: null, y: null},
     strokeLinecap: 'butt',
     strokeLinejoin: 'miter',
     strokeWidth: 2,
@@ -305,7 +307,7 @@ const store = {
   },
 
   updateRotation(val) {
-    this.state.allPaths[store.state.selectedPathIndex].rotation = val;
+    this.state.allPaths[this.state.selectedPathIndex].rotation = val;
     this.updateRotationCenter();
     this.state.transformMatrix = window.SELECTED_PATH.getScreenCTM().inverse();
     this.historySnapshot();
@@ -314,6 +316,33 @@ const store = {
   updateRotationCenter() {
     let center = this.state.allPaths[this.state.selectedPathIndex].center;
     this.state.allPaths[this.state.selectedPathIndex].rotationCenter = center;
+  },
+
+  updateScale(scaleX, scaleY) {
+    const { center } = this.state.allPaths[this.state.selectedPathIndex];
+    const oldScale = this.state.allPaths[this.state.selectedPathIndex].scale;
+
+    function calcScale(val, center, scale) {
+      let p = val - center; // get a vector to v relative to the centerpoint
+      p = p * scale; // scale the cp-relative-vector
+      p = p + center; // translate the scaled vector back
+      return p;
+    } 
+
+    this.state.allPaths[this.state.selectedPathIndex].definition.forEach(s => {
+      if (s.type === "C") {
+        s.curve1.x = calcScale(s.curve1.x, center.x, scaleX/oldScale.x);
+        s.curve1.y = calcScale(s.curve1.y, center.y, scaleY/oldScale.y);
+        s.curve2.x = calcScale(s.curve2.x, center.x, scaleX/oldScale.x);
+        s.curve2.y = calcScale(s.curve2.y, center.y, scaleY/oldScale.y);
+      }
+      s.dest.x = calcScale(s.dest.x, center.x, scaleX/oldScale.x);
+      s.dest.y = calcScale(s.dest.y, center.y, scaleY/oldScale.y);
+    })
+    this.state.allPaths[this.state.selectedPathIndex].scale.x = scaleX;
+    this.state.allPaths[this.state.selectedPathIndex].scale.y = scaleY;
+    this.state.transformMatrix = window.SELECTED_PATH.getScreenCTM().inverse();
+    this.historySnapshot();
   },
 
   historySnapshot() {
@@ -373,8 +402,33 @@ const store = {
     closeSegment.dest = {};
     closeSegment.id = new Date().getTime();
     this.state.allPaths[pathIndex].definition.push(closeSegment);
-  }
+  },
 
+  createSVG() {
+    /* for now this provides just a very basic functionality */
+    const div = document.createElement('div')
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+
+    store.state.allPaths.forEach( p => {
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+      let d = "";
+      p.definition.forEach(s => {
+        d += [s.type, s.curve1.x, s.curve1.y, s.curve2.x, s.curve2.y, s.dest.x, s.dest.y].join(' ');
+      });
+  
+      path.setAttribute('d', d);
+      path.setAttribute('stroke-width', p.strokeWidth);
+      /* a lot to todos */
+      path.setAttribute('translate', 'rotate(' + p.rotation + ' ' + p.rotationCenter.x + ' ' + p.rotationCenter.y);
+
+      svg.appendChild(path);
+    } )
+    
+    div.appendChild(svg);
+    
+    alert(div.innerHTML);
+  }
 };
 
 export default store;

@@ -41,8 +41,8 @@ export default {
     },
     transform: function() {
       let t = '';
-      if(this.path.rotation) {
-        t += `rotate(${this.path.rotation} ${this.path.rotationCenter.x} ${this.path.rotationCenter.y})`;
+      if (this.path.rotation) {
+        t += `rotate(${this.path.rotation} ${this.path.rotationCenter.x} ${this.path.rotationCenter.y}) `;
       }
       return t;
     }
@@ -58,14 +58,14 @@ export default {
     }
   },
   updated: function() {
-    let { selectedPathId } = this.store.state;
+    const { selectedPathId } = this.store.state;
 
     if (this.id === selectedPathId && !(window.SELECTED_PATH === this.$refs.path)) {
       window.SELECTED_PATH = this.$refs.path;
     }
   },
   created: function() {
-    let { selectedPathId } = this.store.state;
+    const { selectedPathId } = this.store.state;
 
     if (this.id === selectedPathId && !(window.SELECTED_PATH === this.$refs.path)) {
       window.SELECTED_PATH = this.$refs.path;

@@ -1,29 +1,40 @@
 <template>
   <div class="app-right-panel shadow position-absolute top-0 right-0 h-100">
     <div class="accordion" v-if="store.state.selectedPathIndex != null">
-      <AccordionItem title="Transformation">
-        Rotation
-        <input v-model.number="rotate" class="form-input-range" type="range" min="0" max="360">
+      <AccordionItem :open="true" title="Transformation">
+        
+        <div class="form-group">
+          <label class="form-label">Rotation</label>
+          <input v-model.number="rotate" class="form-input-range w-50 display-inline mr-2" type="range" min="0" max="360">
+          <input v-model.number="rotate" class="form-input w-25 display-inline" type="number">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Scale</label>
+          <input v-model.number="scale" class="form-input-range w-50 display-inline mr-2" type="range" min="0.01" max="5" step="0.01">
+          <input v-model.number="scale" class="form-input w-25 display-inline" type="number">
+        </div>
+
       </AccordionItem>
-      <AccordionItem title="Stroke">
+      <AccordionItem :open="true" title="Stroke">
 
         <div class="form-group">
             <label class="form-label">Line End</label>
-            <label class="form-radio mr-1">
+            <label class="form-radio mr-3">
               <input v-model="strokeLinejoin" value="miter" type="radio" name="radio-linejoin">
               <i class="radio"></i>
               <span>
                 <svg height="24" width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 21 21 L 3 21 L 3 3 L 21 3 L 21 21 Z M 12 21 L 12 12 L 21 12 " stroke-width="2"></path></svg>
               </span>
             </label>
-            <label class="form-radio mr-1">
+            <label class="form-radio mr-3">
               <input v-model="strokeLinejoin" value="round" type="radio" name="radio-linejoin">
               <i class="radio"></i>
               <span>
                 <svg height="24" width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 21 21 L 3 21 S 3 11 3 11 C 3 6 6 3 11 3 L 21 3 L 21 21 Z M 12 21 L 12 12 L 21 12 " stroke-width="2"></path></svg>
               </span>
             </label>
-            <label class="form-radio mr-1">
+            <label class="form-radio mr-3">
               <input v-model="strokeLinejoin" value="bevel" type="radio" name="radio-linejoin">
               <i class="radio"></i>
               <span>
@@ -34,21 +45,21 @@
 
         <div class="form-group">
             <label class="form-label">Line End</label>
-            <label class="form-radio mr-1">
+            <label class="form-radio mr-3">
               <input v-model="strokeLinecap" value="round" type="radio" name="radio-linecap">
               <i class="radio"></i>
               <span>
                 <svg height="24" width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 21 21 L 11 21 C 0 21 0 3 11 3 L 21 3 L 21 21 Z M 12 12 L 21 12 Z M 12 15 L 12 9 M 11 3 " stroke-width="2"></path></svg>
               </span>
             </label>
-            <label class="form-radio mr-1">
+            <label class="form-radio mr-3">
               <input v-model="strokeLinecap" value="butt" type="radio" name="radio-linecap">
               <i class="radio"></i>
               <span>
                 <svg height="24" width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 21 21 L 11 21 L 11 3 L 21 3 L 21 21 Z M 12 12 L 21 12 Z M 12 15 L 12 9 " stroke-width="2"></path></svg>
               </span>
             </label>
-            <label class="form-radio mr-1">
+            <label class="form-radio mr-3">
               <input v-model="strokeLinecap" value="square" type="radio" name="radio-linecap">
               <i class="radio"></i>
               <span>
@@ -57,16 +68,25 @@
             </label>
           </div>
 
-        Stroke width
-        <input v-model.number="strokeWidth" type="number">
+        <div class="form-group">
+          <label class="form-label">Stroke width</label>
+          <input v-model.number="strokeWidth" class="form-input-range w-50 display-inline mr-2" type="range" min="0.5" max="6" step="0.5">
+          <input v-model.number="strokeWidth" class="form-input w-25 display-inline" type="number">
+        </div>
       </AccordionItem>
-      <AccordionItem title="Segment Settings">
+      <AccordionItem title="Segment Settings" v-if="segmentType !== 'M'">
           change to
           <select v-model="segmentType">
             <option value="L">Line</option>
             <option value="C">Bezier</option>
           </select>
       </AccordionItem>
+    </div>
+
+    <div class="position-absolute bottom-0 p-2 w-100">
+      <button @click="store.createSVG" class="btn btn-primary w-100 mb-0">
+        Get Code
+      </button>
     </div>
   </div>
 </template>
@@ -88,10 +108,18 @@ export default {
   computed: {
     rotate: {
       get() {
-        return this.store.state.allPaths[store.state.selectedPathIndex].rotation || 0;
+        return this.store.state.allPaths[this.store.state.selectedPathIndex].rotation || 0;
       },
       set(val) {
-          this.store.updateRotation(val)
+        this.store.updateRotation(val)
+      }
+    },
+    scale: {
+      get() {
+        return this.store.state.allPaths[this.store.state.selectedPathIndex].scale.x || 1;
+      },
+      set(val) {
+        this.store.updateScale(val, val);
       }
     },
     strokeLinecap: {
@@ -120,7 +148,9 @@ export default {
     },
     segmentType: {
       get() {
-        return this.store.state.allPaths[store.state.selectedPathIndex].definition[store.state.selectedPointIndex].type;
+        const { allPaths, selectedPathIndex, selectedPointIndex } = this.store.state
+        if (selectedPointIndex === null) return;
+        return allPaths[selectedPathIndex].definition[selectedPointIndex].type;
       },
       set(val) {
         if (val === 'C') {

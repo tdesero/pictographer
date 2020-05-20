@@ -91,7 +91,6 @@ export default {
       window.addEventListener('resize', function() {
             this.private.width = this.$refs.svg.clientWidth;
             this.private.height = this.$refs.svg.clientHeight;
-            console.log(this.private.width)
       }.bind(this))
   },
   computed: {
@@ -178,13 +177,13 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .path-point {
-  stroke: blue;
+  stroke:#363bd2;
   stroke-width: 1px;
   fill: #FFF;
 }
 
 .path-point.active {
-  fill: blue;
+  fill:#363bd2;
 }
 
 .controls-layer {

@@ -24,7 +24,6 @@ export default {
     dToString: function() {
       let d = "";
       const { scaleX, scaleY } = this;
-      console.log('scaleX',scaleX)
       this.definition.forEach(s => {
         d += [s.type, 
               s.curve1.x ? s.curve1.x * scaleX : '', 
@@ -59,13 +58,13 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .edit-path.active {
-  stroke:blue;
+  stroke: #363bd2;
   stroke-width: 2px;
   opacity: 1;
 }
 
 .edit-path {
-  stroke:blue;
+  stroke: #363bd2;
   stroke-width: 10px;
   opacity: 0;
 }

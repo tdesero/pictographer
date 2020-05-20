@@ -4,7 +4,7 @@ window.SELECTED_PATH = {};
 
 function emptyPath() {
   return {
-    id: Date.now(),
+    id: new Date().getTime(),
     definition: [],
     rotation: null,
     center: {},
@@ -195,7 +195,7 @@ const store = {
     this.state.currentPoint = {x: point.x, y: point.y};
 
     if (where === 'END') {
-      let id = Date.now();
+      let id = new Date().getTime();
 
       allPaths[selectedPathIndex].definition.push({
         type: 'L',
@@ -211,7 +211,7 @@ const store = {
       this.state.selectedPointIndex++;
     }
     if (where === 'START') {
-      let id = Date.now();
+      let id = new Date().getTime();
 
       allPaths[selectedPathIndex].definition.unshift({
         type: 'M',
@@ -228,7 +228,7 @@ const store = {
       this.state.isDrawing = false;
     }
     if ( where === "NEW" ) {
-      let id = Date.now();
+      let id = new Date().getTime();
       this.state.allPaths[this.state.selectedPathIndex].definition.push({
         type: 'M',
         id: id,

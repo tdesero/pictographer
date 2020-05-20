@@ -7,9 +7,9 @@
       >
         <EditPath v-for="(path, index) in store.state.allPaths" :definition="path.definition" :path="path" :key="path.id" :id="path.id" :index="index" :scaleX="scaleX" :scaleY="scaleY"></EditPath>
 
-        <g v-for="(path, index) in store.state.allPaths" :key="'g-' + path.id" :class="{active: path.id === store.state.selectedPathId}" :transform="transform(path)">
+        <g v-for="(path, index) in store.state.allPaths" :key="'group-' + path.id" :class="{active: path.id === store.state.selectedPathId}" :transform="transform(path)">
         
-            <g v-for="(segment, segmentIndex) in path.definition" :key="'s-' + segment.id" :class="{hide: store.state.hideControls}" stroke="none" fill="blue">
+            <g v-for="(segment, segmentIndex) in path.definition" :key="'seg-' + segment.id" :class="{hide: store.state.hideControls}" stroke="none" fill="blue">
             <!-- curve point handles -->
             <path 
                 v-if="segment.type === 'C'" 
@@ -47,10 +47,13 @@
                 @click="selectPath(path.id, index)"
                 :x="segment.dest.x * scaleX - 5" 
                 :y="segment.dest.y * scaleY - 5" 
+                class="path-point"
+                :class="{ active: segment.id === store.state.selectedPointId }"
+                :key="'point-' + segment.id"
                 width="10"
                 height="10"
             ></rect>
-        </g>
+          </g>
         </g>
 
         <!-- live line preview -->
@@ -151,6 +154,16 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.path-point {
+  stroke: blue;
+  stroke-width: 1px;
+  fill: #FFF;
+}
+
+.path-point.active {
+  fill: blue;
+}
+
 .controls-layer {
     overflow: visible;
 }

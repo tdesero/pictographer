@@ -12,6 +12,12 @@
         <option value="butt">butt</option>
         <option value="square">square</option>
       </select>
+
+      change to
+      <select v-model="segmentType">
+        <option value="L">Line</option>
+        <option value="C">Bezier</option>
+      </select>
     </div>
   </div>
 </template>
@@ -41,6 +47,23 @@ export default {
       },
       set(val) {
         this.store.setStrokeLinecap(val)
+      }
+    },
+    segmentType: {
+      get() {
+        return this.store.state.allPaths[store.state.selectedPathIndex].definition[store.state.selectedPointIndex].type;
+      },
+      set(val) {
+        if (val === 'C') {
+          //just a dummy for now
+          this.store.state.allPaths[store.state.selectedPathIndex].definition[store.state.selectedPointIndex].curve1 = {x:0, y:0};
+          this.store.state.allPaths[store.state.selectedPathIndex].definition[store.state.selectedPointIndex].curve2 = {x:0, y:0};
+        }
+        if (val === 'L') {
+          this.store.state.allPaths[store.state.selectedPathIndex].definition[store.state.selectedPointIndex].curve1 = {};
+          this.store.state.allPaths[store.state.selectedPathIndex].definition[store.state.selectedPointIndex].curve2 = {};
+        }
+        this.store.state.allPaths[store.state.selectedPathIndex].definition[store.state.selectedPointIndex].type = val;
       }
     }
   }

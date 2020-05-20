@@ -1,22 +1,37 @@
 <template>
   <div class="v_left-panel absolute-y-center p-5 text-center">
+
     <button
       @click="newPath"
       class="btn btn-primary btn btn-primary btn-circle btn-xl"
-    >new</button>
+    >+</button>
+
     <button
       @click="store.selectTool('PEN')"
       class="btn btn-primary btn btn-primary btn-circle btn-xl"
-    >Pen</button>
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 19 2 L 13 8 L 10 6 L 4 13 L 2 22 L 12 20 L 18 14 L 16 11 L 22 5 L 19 2 Z M 2 22 L 9 15 M 16 5 L 19 8 " stroke-width="2"></path></svg>
+    
+    </button>
+
     <button
       @click="store.selectTool('SELECT')"
       class="btn btn-primary btn btn-primary btn-circle btn-xl"
-    >select</button>
+    >
+    
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path data-v-076a7a29="" data-v-306af221="" d="M     5 5L     5 5L     14 25L     16 16L     25 13Z      " fill="none" transform="" stroke-linecap="butt" stroke-width="2"></path></svg>
+    
+    </button>
 
     <button
       @click="store.deleteSegment()"
       class="btn btn-primary btn btn-primary btn-circle btn-xl"
-    >delPoint</button>
+    >
+    
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 4 4 L 4 8 L 20 8 L 20 3 L 4 3 Z M 6 8 L 6 21 L 18 21 L 18 8 M 10 9 L 10 20 M 14 9 L 14 21 " stroke-width="2"></path></svg>
+    
+    </button>
+
   </div>
 </template>
 
@@ -45,5 +60,9 @@ export default {
   max-width: 5rem;
   max-width: 5rem;
   z-index: 9;
+}
+
+.btn {
+  margin-bottom: 1rem;
 }
 </style>

@@ -10,6 +10,8 @@ function emptyPath() {
     center: {},
     rotationCenter: {},
     strokeLinecap: 'butt',
+    strokeLinejoin: 'miter',
+    strokeWidth: 2,
   }
 }
 
@@ -256,9 +258,11 @@ const store = {
     if (selectedPointIndex !== null) {
       if ( selectedPointIndex === 0 ) {
 
-        if (this.state.allPaths[selectedPathIndex].length > 1) {
+        if (this.state.allPaths[selectedPathIndex].definition.length > 1) {
           /* make the first point moveto ('M') instead of lineto ('L') */
           this.state.allPaths[selectedPathIndex].definition[1].type = 'M';
+          this.state.allPaths[selectedPathIndex].definition[1].curve1 = {};
+          this.state.allPaths[selectedPathIndex].definition[1].curve2 = {};
         }
         
       }
@@ -351,6 +355,24 @@ const store = {
   setStrokeLinecap(str) {
     const { selectedPathIndex } = this.state;
     this.state.allPaths[selectedPathIndex].strokeLinecap = str;
+  },
+
+  setStrokeLinejoin(str) {
+    const { selectedPathIndex } = this.state;
+    this.state.allPaths[selectedPathIndex].strokeLinejoin = str;
+  },
+
+  setStrokeWidth(n) {
+    const { selectedPathIndex } = this.state;
+    this.state.allPaths[selectedPathIndex].strokeWidth = n;
+  },
+
+  joinPoints(pathIndex) {
+    let closeSegment = Object.assign({}, this.state.allPaths[pathIndex].definition[0]);
+    closeSegment.type = 'Z';
+    closeSegment.dest = {};
+    closeSegment.id = new Date().getTime();
+    this.state.allPaths[pathIndex].definition.push(closeSegment);
   }
 
 };

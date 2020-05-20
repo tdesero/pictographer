@@ -19,8 +19,7 @@
             ></path>
             <circle
                 v-if="segment.type === 'C'"
-                @mousedown="startPointMove(segment.id, 'curve1')"
-                @click="selectPath(path.id, index)"
+                @mousedown="pointHandleMouseDown(segment.id, segmentIndex, 'curve1', path.id, index)"
                 :cx="segment.curve1.x * scaleX" 
                 :cy="segment.curve1.y  * scaleY" 
                 r="4" 
@@ -33,8 +32,7 @@
             ></path>
             <circle
                 v-if="segment.type === 'C'"
-                @mousedown="startPointMove(segment.id, 'curve2')"
-                @click="selectPath(path.id, index)"
+                @mousedown="pointHandleMouseDown(segment.id, segmentIndex, 'curve2', path.id, index)"
                 :cx="segment.curve2.x * scaleX" 
                 :cy="segment.curve2.y * scaleY" 
                 r="4" 
@@ -42,9 +40,9 @@
 
             <!-- dest points -->
             <rect
-                @mousedown="startPointMove(segment.id, 'dest')"
+                v-if="segment.type !== 'Z'"
+                @mousedown="pointHandleMouseDown(segment.id, segmentIndex, 'dest', path.id, index)"
                 @mouseup="drawLine"
-                @click="selectPath(path.id, index)"
                 :x="segment.dest.x * scaleX - 5" 
                 :y="segment.dest.y * scaleY - 5" 
                 class="path-point"
@@ -147,6 +145,31 @@ export default {
     },
     handleMouseMove(event) {
         this.$emit('handleMouseMove', event)
+    },
+    pointHandleMouseDown(segmentId, segmentIndex, pointType, pathId, pathIndex) {
+      const { tool, allPaths, selectedPointIndex, selectedPathId } = this.store.state;
+      let shouldJoin = false;
+
+      const oldPointIsLast = function() {
+        return selectedPointIndex === allPaths[pathIndex].definition.length - 1;
+      }
+      const newPointIsLast = function() {
+        return segmentIndex === allPaths[pathIndex].definition.length - 1;
+      }
+
+      if ( tool === 'PEN' && selectedPathId === pathId) {
+        /* close path on first point & last point */
+        if ( segmentIndex === 0 && oldPointIsLast) {
+          shouldJoin = true;
+        } else if ( newPointIsLast && selectedPointIndex === 0 ) {
+          shouldJoin = true;
+        }
+      }
+      
+
+      this.selectPath(pathId, pathIndex);
+      this.startPointMove(segmentId, pointType); //sets selected point
+      if (shouldJoin) { this.store.joinPoints(pathIndex); }
     }
   }
 };

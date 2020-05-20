@@ -32,4 +32,15 @@ export default {
 </script>
 
 <style>
+html, body {
+  height: 100%;
+  color: #333;
+  letter-spacing: 0.05em;
+  font-size: 14px;
+}
+
+#app {
+  background-color: #222;
+  height: 100%;
+}
 </style>

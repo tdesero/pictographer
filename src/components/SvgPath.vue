@@ -6,6 +6,8 @@
     @click="handleClick" 
     :transform="transform" 
     :stroke-linecap="path.strokeLinecap"
+    :stroke-linejoin="path.strokeLinejoin"
+    :stroke-width="path.strokeWidth"
     ref="path"
     ></path>
 </template>
@@ -74,7 +76,4 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.active {
-  stroke:green;
-}
 </style>

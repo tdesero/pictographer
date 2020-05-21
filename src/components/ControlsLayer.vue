@@ -9,7 +9,7 @@
 
         <g v-for="(path, index) in store.state.allPaths" :key="'group-' + path.id" :class="{active: path.id === store.state.selectedPathId}" :transform="transform(path)">
         
-            <g v-for="(segment, segmentIndex) in path.definition" :key="'seg-' + segment.id" :class="{hide: store.state.hideControls}" stroke="none" fill="blue">
+            <g v-for="(segment, segmentIndex) in path.definition" :key="'seg-' + segment.id" :class="{hide: index !== store.state.selectedPathIndex}" stroke="none" fill="blue">
             <!-- curve point handles -->
             <path 
                 v-if="segment.type === 'C'" 
@@ -188,5 +188,9 @@ export default {
 
 .controls-layer {
     overflow: visible;
+}
+
+.hide {
+  visibility: hidden;
 }
 </style>

@@ -2,9 +2,11 @@
   <div class="v_left-panel absolute-y-center p-5 text-center">
 
     <button
-      @click="newPath"
+      @click="store.selectTool('SELECT')"
       class="btn btn-primary btn btn-primary btn-circle btn-xl"
-    >+</button>
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path data-v-076a7a29="" data-v-306af221="" d="M     5 5L     5 5L     14 25L     16 16L     25 13Z      " fill="none" transform="" stroke-linecap="butt" stroke-width="2"></path></svg>
+    </button>
 
     <button
       @click="store.selectTool('PEN')"
@@ -15,21 +17,15 @@
     </button>
 
     <button
-      @click="store.selectTool('SELECT')"
+      @click="newPath"
       class="btn btn-primary btn btn-primary btn-circle btn-xl"
-    >
-    
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path data-v-076a7a29="" data-v-306af221="" d="M     5 5L     5 5L     14 25L     16 16L     25 13Z      " fill="none" transform="" stroke-linecap="butt" stroke-width="2"></path></svg>
-    
-    </button>
+    >+</button>
 
     <button
       @click="store.deleteSegment()"
       class="btn btn-primary btn btn-primary btn-circle btn-xl"
     >
-    
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 4 4 L 4 8 L 20 8 L 20 3 L 4 3 Z M 6 8 L 6 21 L 18 21 L 18 8 M 10 9 L 10 20 M 14 9 L 14 21 " stroke-width="2"></path></svg>
-    
     </button>
 
   </div>

@@ -1,5 +1,5 @@
 <template>
-  <svg 
+  <svg
       @mousedown="handleMouseDown" 
       @mousemove="handleMouseMove"
       class="controls-layer position-absolute w-100 h-100 top-0 left-0" ref="svg"
@@ -9,12 +9,12 @@
 
         <g v-for="(path, index) in store.state.allPaths" :key="'group-' + path.id" :class="{active: path.id === store.state.selectedPathId}" :transform="transform(path)">
         
-            <g v-for="(segment, segmentIndex) in path.definition" :key="'seg-' + segment.id" :class="{hide: index !== store.state.selectedPathIndex}" stroke="none" fill="blue">
+            <g v-for="(segment, segmentIndex) in path.definition" :key="'seg-' + segment.id" :class="{hide: (index !== store.state.selectedPathIndex) || (store.state.tool === 'SELECT')}" stroke="none" fill="#363bd2">
             <!-- curve point handles -->
             <path 
                 v-if="segment.type === 'C'" 
                 :d="'M' + path.definition[segmentIndex - 1].dest.x * scaleX + ' ' + path.definition[segmentIndex - 1].dest.y * scaleY + ' L ' + segment.curve1.x * scaleX + ' ' + segment.curve1.y * scaleY"
-                stroke="blue"
+                stroke="#363bd2"
                 stroke-width="1"
             ></path>
             <circle
@@ -27,7 +27,7 @@
             <path 
                 v-if="segment.type === 'C'" 
                 :d="'M' + segment.dest.x * scaleX + ' ' + segment.dest.y * scaleY + ' L ' + segment.curve2.x * scaleX + ' ' + segment.curve2.y * scaleY"
-                stroke="blue"
+                stroke="#363bd2"
                 stroke-width="1"
             ></path>
             <circle
@@ -52,16 +52,29 @@
                 height="10"
             ></rect>
           </g>
+
+          <!-- bounding boxes -->
+          <rect
+              v-if="store.state.tool === 'SELECT'"
+              :class="{hide: path.id !== store.state.selectedPathId}"
+              :x="path.bbox.x * scaleX" 
+              :y="path.bbox.y * scaleY"
+              :key="'bbox-' + path.id"
+              :width="path.bbox.width * scaleX"
+              :height="path.bbox.height * scaleY"
+              fill="none"
+              stroke="red"
+          ></rect>
         </g>
 
         <!-- live line preview -->
         <path 
-        id="live-preview-path"
-        v-if="hasLivePreview"
-        :d="livePreview" 
-        stroke="blue" 
-        :transform="transform(store.state.allPaths[store.state.selectedPathIndex])"
-        :class="{hide: store.state.hideControls}"
+          id="live-preview-path"
+          v-if="hasLivePreview"
+          :d="livePreview" 
+          stroke="#363bd2" 
+          :transform="transform(store.state.allPaths[store.state.selectedPathIndex])"
+          :class="{hide: store.state.hideControls}"
         ></path>
 
     </svg>
@@ -140,6 +153,11 @@ export default {
       }
     },
     handleMouseDown(event) {
+        let {tool} = this.store.state;
+        console.log(event.target.matches('.controls-layer'))
+        if ( tool !== 'PEN' && event.target.matches('.controls-layer')) {
+          this.store.unselectPath();
+        }
         this.$emit('handleMouseDown', event)
     },
     handleMouseMove(event) {

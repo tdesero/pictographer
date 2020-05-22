@@ -1,5 +1,5 @@
 <template>
-  <path class="edit-path" :class="{active: isActive}" :d="dToString" fill="none" @click="handleClick" :transform="transform" ref="path"></path>
+  <path class="edit-path" :class="{active: isActive}" :d="dToString" fill="none" @click="handleClick" @mousedown="handleMouseDown" :transform="transform" ref="path"></path>
 </template>
 
 <script>
@@ -26,17 +26,18 @@ export default {
       const { scaleX, scaleY } = this;
       this.definition.forEach(s => {
         d += [s.type, 
-              s.curve1.x ? s.curve1.x * scaleX : '', 
-              s.curve1.y ? s.curve1.y * scaleY : '', 
-              s.curve2.x ? s.curve2.x * scaleX : '', 
-              s.curve2.y ? s.curve2.y * scaleY : '', 
-              s.dest.x ? s.dest.x * scaleX : '', 
-              s.dest.y ? s.dest.y * scaleY : ''].join(' ');
+              s.curve1.x !== undefined ? s.curve1.x * scaleX : '', 
+              s.curve1.y !== undefined ? s.curve1.y * scaleY : '', 
+              s.curve2.x !== undefined ? s.curve2.x * scaleX : '', 
+              s.curve2.y !== undefined ? s.curve2.y * scaleY : '', 
+              s.dest.x !== undefined ? s.dest.x * scaleX : '', 
+              s.dest.y !== undefined ? s.dest.y * scaleY : ''].join(' ');
       });
       return d;
     },
     isActive: function() {
-      return this.store.state.selectedPathId === this.id;
+      const { selectedPathId, tool } = this.store.state;
+      return (tool === 'EDIT' || tool === 'PEN') && selectedPathId === this.id;
     },
     transform: function() {
       let t = '';
@@ -50,6 +51,11 @@ export default {
   methods: {
     handleClick: function() {
       this.store.selectPath(this.id, this.index);
+    },
+    handleMouseDown: function() {
+      if (this.store.state.tool === 'SELECT') {
+        this.store.state.isMovingPath = true;
+      }
     }
   }
 };
@@ -65,7 +71,7 @@ export default {
 
 .edit-path {
   stroke: #363bd2;
-  stroke-width: 10px;
+  stroke-width: 20px;
   opacity: 0;
 }
 </style>

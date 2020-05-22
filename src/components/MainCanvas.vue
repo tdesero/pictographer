@@ -1,9 +1,8 @@
 <template>
-  <div class="v_app-canvas absolute-center shadow" @mouseup="endPointMove">
+  <div class="v_app-canvas position-relative shadow" @mouseup="endPointMove">
     <svg 
       class="w-100" stroke="black" :viewBox="'0 0 ' + store.state.viewBox.x + ' ' + store.state.viewBox.y">
       <SvgPath v-for="(path, index) in store.state.allPaths" :definition="path.definition" :path="path" :key="path.id" :id="path.id" :index="index" :ref="path.id"></SvgPath>
-    
     </svg>
 
     <ControlsLayer
@@ -94,6 +93,8 @@ export default {
   max-height: 500px;
   max-width: 500px;
   overflow: visible;
+  margin: auto;
+  top: calc(50% - 250px);
 }
 
 g.active {

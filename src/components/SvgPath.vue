@@ -3,7 +3,6 @@
     :class="{active: isActive}" 
     :d="dToString" 
     fill="none" 
-    @click="handleClick" 
     :transform="transform" 
     :stroke-linecap="path.strokeLinecap"
     :stroke-linejoin="path.strokeLinejoin"
@@ -47,16 +46,6 @@ export default {
       return t;
     }
   },
-  methods: {
-    handleClick: function() {
-      this.store.selectPath(this.id, this.index);
-    }
-  },
-  beforeUpdate: function() {
-    if ( this.isActive ) {
-      this.store.updatePathCenter(this.$refs.path.getBBox())
-    }
-  },
   updated: function() {
     const { selectedPathId } = this.store.state;
 
@@ -64,10 +53,10 @@ export default {
       window.SELECTED_PATH = this.$refs.path;
     }
   },
-  created: function() {
+  mounted: function() {
     const { selectedPathId } = this.store.state;
 
-    if (this.id === selectedPathId && !(window.SELECTED_PATH === this.$refs.path)) {
+    if (this.id === selectedPathId) {
       window.SELECTED_PATH = this.$refs.path;
     }
   }

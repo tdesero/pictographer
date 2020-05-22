@@ -3,7 +3,10 @@
     <button class="btn btn-alt-gray-3 btn-sm mr-1 mb-0" @click="historyUndo">
       <svg width="24" height="16" viewBox="0 0 24 16" fill="none" stroke="currentColor"><path d="M 21 17 C 21 13 18 10 14 10 L 4 10 M 7 6 L 3 10 L 7 14 " stroke-width="2"></path></svg>
     </button>
-    <button class="btn btn-alt-gray-3 btn-primary btn-sm mb-0" @click="historyRedo">
+    <button 
+    :class="{ disabled: store.state.historyPos === -1 }"
+    :disabled="store.state.historyPos === -1"
+    class="btn btn-alt-gray-3 btn-primary btn-sm mb-0" @click="historyRedo">
       <svg width="24" height="16" viewBox="0 0 24 16" fill="none" stroke="currentColor"><path d="M 21 17 C 21 13 18 10 14 10 L 4 10 M 7 6 L 3 10 L 7 14 " stroke-width="2" transform="scale(-1,1) translate(-24,0)"></path></svg>
     </button>
 
@@ -59,10 +62,14 @@ export default {
   position: relative;
   color: #EEE;
   background-color: #333;
-  width: calc(100% - 250px);
+  width: 100%;
 }
 
 .btn svg {
   display: inline;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }
 </style>

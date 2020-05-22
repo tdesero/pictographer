@@ -8,6 +8,7 @@ function emptyPath() {
     definition: [],
     rotation: null,
     scale: {x: 1, y: 1},
+    bbox: {},
     center: {},
     rotationCenter: {},
     translate: {x: null, y: null},
@@ -40,14 +41,18 @@ const store = {
     selectedPointId: null,
     selectedPointStep: null,
     selectedPointIndex: null,
-    movePoint: false,
+    isMovingPoint: false,
+    isMovingPath: false,
     svgPoint: {},
     isFirstPoint: true,
     isDrawing: false,
     currentSegment: 'L',
     snapToGrid: true,
     hideControls: false,
-    viewBox: {x: 30, y: 30}
+    viewBox: {x: 24, y: 24},
+    clientStartPos: {},
+    movePathStartPos: {}, //stores the path definition (all segments)
+    //clientMovePos: {}
   },
 
   /**
@@ -70,7 +75,7 @@ const store = {
 
   /**
    * select tool
-   * 'PEN', 'CIRCLE', 'RECT', 'SELECT', 'NONE'
+   * 'PEN', 'CIRCLE', 'RECT', 'EDIT', 'BBOX', 'NONE'
    * @param {string} tool
    * @public
    */
@@ -92,11 +97,21 @@ const store = {
    */
   handleMouseDown(event, domElement) {
     if (this.debug) console.log("handleMouseDown");
+    const { selectedPointIndex, selectedPathIndex } = this.state;
+    let pathLength;
+
     this.state.transformMatrix = domElement.getScreenCTM().inverse();
     this.state.svgPoint = document.querySelector('#app svg').createSVGPoint();
 
-    const { selectedPointIndex, selectedPathIndex } = this.state;
-    let pathLength;
+    /* Tracking the point for path moving */
+    let point = this.state.svgPoint;
+    point.x = event.clientX;
+    point.y = event.clientY;
+    point = point.matrixTransform(this.state.transformMatrix);
+    if (this.state.snapToGrid) { point = roundPoint(point) }
+    this.state.clientStartPos = {x: point.x, y: point.y};
+    this.state.movePathStartPos = JSON.parse(JSON.stringify(this.state.allPaths[selectedPathIndex].definition));
+
     
     if (selectedPathIndex !== null) {
       pathLength = this.state.allPaths[selectedPathIndex].definition.length;
@@ -127,7 +142,7 @@ const store = {
     if (this.debug) console.log("handleMouseMove");
 
     /* pen selected */
-    if (this.state.tool === 'PEN' && !this.state.movePoint) {
+    if (this.state.tool === 'PEN' && !this.state.isMovingPoint) {
       if (this.state.allPaths[this.state.selectedPathIndex].definition.length === 0) return;
       let point = this.state.svgPoint;
       point.x = event.clientX;
@@ -155,7 +170,7 @@ const store = {
     }
 
     /* moving point */
-    if (this.state.movePoint) {
+    if (this.state.isMovingPoint) {
       let point = this.state.svgPoint;
       point.x = event.clientX;
       point.y = event.clientY;
@@ -165,18 +180,52 @@ const store = {
       /* this moves the current selected point */
       this.state.allPaths[this.state.selectedPathIndex].definition[this.state.selectedPointIndex][this.state.selectedPointStep] = {x: point.x, y: point.y};
     }
+
+    /* moving path */
+    if (this.state.tool === 'SELECT' && this.state.isMovingPath) {
+      const { movePathStartPos } = this.state;
+      let diff = {};
+      let point = this.state.svgPoint;
+      point.x = event.clientX;
+      point.y = event.clientY;
+      point = point.matrixTransform(this.state.transformMatrix);
+      if (this.state.snapToGrid) { point = roundPoint(point) }
+
+      diff.x = point.x - this.state.clientStartPos.x;
+      diff.y = point.y - this.state.clientStartPos.y;
+
+      this.state.allPaths[this.state.selectedPathIndex].definition.forEach((s, index) => {
+        if (s.type === 'Z') return;
+        s.dest.x = movePathStartPos[index].dest.x + diff.x;
+        s.dest.y = movePathStartPos[index].dest.y + diff.y;
+
+        if (s.curve1.x !== undefined) {
+          s.curve1.x = movePathStartPos[index].curve1.x + diff.x;
+          s.curve1.y = movePathStartPos[index].curve1.y + diff.y;
+        }
+        if (s.curve2.x !== undefined) {
+          s.curve2.x = movePathStartPos[index].curve2.x + diff.x;
+          s.curve2.y = movePathStartPos[index].curve2.y + diff.y;
+        }
+      })
+    }
   },
 
   handleMouseUp() {
     let {allPaths, selectedPathIndex, selectedPointIndex} = this.state;
 
-    if (this.state.movePoint) {
+    if (this.state.isMovingPoint) {
       this.historySnapshot()
     }
 
-    this.state.movePoint = false;
+    this.state.isMovingPoint = false;
+    this.state.isMovingPath = false;
 
     this.state.isDrawing = false;
+
+    this.updateBBox();
+    this.updatePathCenter(allPaths[selectedPathIndex].bbox);
+    //this.updateRotationCenter();
 
     if (selectedPathIndex !== null && selectedPointIndex !== null) {
       this.state.currentPoint = allPaths[selectedPathIndex].definition[selectedPointIndex].dest;
@@ -249,7 +298,36 @@ const store = {
     } 
 
     this.state.isFirstPoint = false;
+    
+    /* update bbox according to the new point */
+    if (window.SELECTED_PATH) {
+      let bbox = window.SELECTED_PATH.getBBox();
+      this.updateBBox()
+      this.updatePathCenter(bbox);
+      this.updateRotationCenter();
+    }
+
     this.historySnapshot();
+  },
+
+  deleteAction() {
+    if (this.debug) console.log("delete");
+    const { tool } = this.state;
+
+    if (tool === "PEN" || tool === "EDIT") {
+      this.deleteSegment();
+    } else if (tool === "SELECT") {
+      this.deletePath();
+    }
+    this.historySnapshot();
+  },
+
+  deletePath() {
+    const {selectedPathIndex} = this.state;
+
+    if (selectedPathIndex !== null) {
+      this.state.allPaths.splice(selectedPathIndex, 1);
+    }
   },
 
   deleteSegment() {
@@ -274,23 +352,31 @@ const store = {
       this.state.selectedPointIndex = null;
       this.state.selectedPointId = null;
     }
-    this.historySnapshot();
+    this.updateBBox();
   },
 
   selectPath(id, index) {
     if (this.debug) console.log("selectPath", id, index);
+    const { tool } = this.state;
+    this.updateBBox();
 
-    if (this.state.tool === "SELECT") {
+    if (tool === "EDIT" || tool === "SELECT") {
       this.state.selectedPathId = id;
       this.state.selectedPathIndex = index;
     }
+  },
+
+  unselectPath() {
+    if (this.debug) console.log("unselectPath");
+    this.state.selectedPathId = null
+    this.state.selectedPathIndex = null;
   },
 
   /* TODO */
   setSelectedPoint(id, step) {
     let { allPaths, selectedPathIndex} = this.state;
 
-    this.state.movePoint = true;
+    this.state.isMovingPoint = true;
     this.state.selectedPointId = id;
     this.state.selectedPointStep = step;
     this.state.selectedPointIndex = allPaths[selectedPathIndex].definition.findIndex(p => p.id === id);
@@ -298,12 +384,22 @@ const store = {
     this.state.currentPoint = allPaths[selectedPathIndex].definition[this.state.selectedPointIndex].dest;
   },
 
+  updateBBox() {
+    const { selectedPathIndex } = this.state;
+    if (window.SELECTED_PATH && selectedPathIndex) {
+      const bbox = window.SELECTED_PATH.getBBox();
+      this.state.allPaths[selectedPathIndex].bbox = bbox;
+    }
+    if (this.debug) { console.log('updateBBox');}
+  },
+
   updatePathCenter(bbox) {
+    const { selectedPathIndex } = this.state;
     let center = {
       x: bbox.x + bbox.width/2,
       y: bbox.y + bbox.height/2
     }
-    this.state.allPaths[this.state.selectedPathIndex].center = center;
+    this.state.allPaths[selectedPathIndex].center = center;
   },
 
   updateRotation(val) {

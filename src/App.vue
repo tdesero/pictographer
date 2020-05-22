@@ -42,5 +42,6 @@ html, body {
 #app {
   background-color: #222;
   height: 100%;
+  padding-right: 250px; /* right side panel */
 }
 </style>

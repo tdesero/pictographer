@@ -2,6 +2,13 @@ import Vue from 'vue';
 
 window.SELECTED_PATH = {};
 
+/* polyfill */
+SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformToElement ||        function(toElement) {
+
+  return toElement.getScreenCTM().inverse().multiply(this.getScreenCTM());
+
+};
+
 function emptyPath() {
   return {
     id: new Date().getTime(),
@@ -410,8 +417,44 @@ const store = {
   },
 
   updateRotationCenter() {
+    /* rotation Center is different from the regulat center. It is defined by the parent Elements BBox because otherwise the existing (rotation) transforms would be ignored */
     let center = this.state.allPaths[this.state.selectedPathIndex].center;
     this.state.allPaths[this.state.selectedPathIndex].rotationCenter = center;
+  },
+
+  bakeRotation() {
+    //const svg = document.querySelector('#app svg')
+    const {rotationCenter, rotation} = this.state.allPaths[this.state.selectedPathIndex];
+
+    function rotatePoint(p, cx, cy, angle) {
+      let pi = Math.PI;
+      let s = Math.sin(angle * (pi/180)); //radians needed
+      let c = Math.cos(angle * (pi/180)); //radians needed
+
+      // translate point back to origin:
+      p.x -= cx;
+      p.y -= cy;
+
+      // rotate point
+      let xnew = p.x * c - p.y * s;
+      let ynew = p.x * s + p.y * c;
+
+      // translate point back:
+      p.x = xnew + cx;
+      p.y = ynew + cy;
+      return p;
+    }
+
+    this.state.allPaths[this.state.selectedPathIndex].definition.forEach(s => {
+      if (s.type === "C") {
+        s.curve1 = rotatePoint( s.curve1, rotationCenter.x,  rotationCenter.y, rotation);  
+        s.curve2 = rotatePoint( s.curve2, rotationCenter.x,  rotationCenter.y, rotation);
+      }
+      s.dest = rotatePoint( s.dest, rotationCenter.x,  rotationCenter.y, rotation);
+    })
+    this.state.allPaths[this.state.selectedPathIndex].rotation = 0;
+    this.state.transformMatrix = window.SELECTED_PATH.getScreenCTM().inverse();
+    this.historySnapshot();
   },
 
   updateScale(scaleX, scaleY) {
@@ -516,7 +559,7 @@ const store = {
       path.setAttribute('d', d);
       path.setAttribute('stroke-width', p.strokeWidth);
       /* a lot to todos */
-      path.setAttribute('translate', 'rotate(' + p.rotation + ' ' + p.rotationCenter.x + ' ' + p.rotationCenter.y);
+      path.setAttribute('transform', 'rotate(' + p.rotation + ' ' + p.rotationCenter.x + ' ' + p.rotationCenter.y + ')');
 
       svg.appendChild(path);
     } )

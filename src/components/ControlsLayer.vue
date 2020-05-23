@@ -60,8 +60,8 @@
               :x="path.bbox.x * scaleX" 
               :y="path.bbox.y * scaleY"
               :key="'bbox-' + path.id"
-              :width="path.bbox.width * scaleX"
-              :height="path.bbox.height * scaleY"
+              :width="(path.bbox.width * scaleX) || 1"
+              :height="(path.bbox.height * scaleY )|| 1"
               fill="none"
               stroke="red"
           ></rect>

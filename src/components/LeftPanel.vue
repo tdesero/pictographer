@@ -74,5 +74,10 @@ export default {
 .btn {
   margin-bottom: 1rem;
   pointer-events: auto;
+  transition: .3s transform;
+}
+
+.btn:hover {
+  transform: translate(4px, 0);
 }
 </style>

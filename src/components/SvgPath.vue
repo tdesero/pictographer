@@ -1,14 +1,14 @@
 <template>
-  <path 
-    :class="{active: isActive}" 
-    :d="dToString" 
-    fill="none" 
-    :transform="transform" 
-    :stroke-linecap="path.strokeLinecap"
-    :stroke-linejoin="path.strokeLinejoin"
-    :stroke-width="path.strokeWidth"
-    ref="path"
-    ></path>
+    <path 
+      :class="{active: isActive}" 
+      :d="dToString" 
+      fill="none" 
+      :transform="transform" 
+      :stroke-linecap="path.strokeLinecap"
+      :stroke-linejoin="path.strokeLinejoin"
+      :stroke-width="path.strokeWidth"
+      ref="path"
+      ></path>
 </template>
 
 <script>

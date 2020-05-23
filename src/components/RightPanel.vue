@@ -7,6 +7,12 @@
           <label class="form-label">Rotation</label>
           <input @focus="updateCenter" v-model.number="rotate" class="form-input-range w-50 display-inline mr-2" type="range" min="0" max="360">
           <input @focus="updateCenter" v-model.number="rotate" class="form-input w-25 display-inline" type="number">
+
+          <button class="btn btn-alt-gray-3 btn-sm btn-circle"
+            @click="store.bakeRotation()"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 4 12 L 8 17 L 20 7" stroke-width="2"></path></svg>
+          </button>
         </div>
 
         <div class="form-group">

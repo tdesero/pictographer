@@ -5,8 +5,8 @@
         
         <div class="form-group">
           <label class="form-label">Rotation</label>
-          <input @focus="updateCenter" v-model.number="rotate" class="form-input-range w-50 display-inline mr-2" type="range" min="0" max="360">
-          <input @focus="updateCenter" v-model.number="rotate" class="form-input w-25 display-inline" type="number">
+          <input @focus="updateCenter" @blur="store.bakeRotation()" v-model.number="rotate" class="form-input-range w-50 display-inline mr-2" type="range" min="0" max="360">
+          <input @focus="updateCenter" @blur="store.bakeRotation()" v-model.number="rotate" class="form-input w-25 display-inline mr-1" type="number">
 
           <button class="btn btn-alt-gray-3 btn-sm btn-circle"
             @click="store.bakeRotation()"
@@ -17,8 +17,8 @@
 
         <div class="form-group">
           <label class="form-label">Scale</label>
-          <input @focus="updateCenter" v-model.number="scale" class="form-input-range w-50 display-inline mr-2" type="range" min="0.01" max="5" step="0.01">
-          <input @focus="updateCenter" v-model.number="scale" class="form-input w-25 display-inline mr-1" type="number" min="0.01" step="0.01">
+          <input @focus="updateCenter" @blur="resetScaleVal" v-model.number="scale" class="form-input-range w-50 display-inline mr-2" type="range" min="0.01" max="5" step="0.01">
+          <input @focus="updateCenter" @blur="resetScaleVal" v-model.number="scale" class="form-input w-25 display-inline mr-1" type="number" min="0.01" step="0.01">
 
           <button class="btn btn-alt-gray-3 btn-sm btn-circle"
             @click="resetScaleVal"
@@ -82,7 +82,7 @@
 
         <div class="form-group">
           <label class="form-label">Stroke width</label>
-          <input v-model.number="strokeWidth" class="form-input-range w-50 display-inline mr-2" type="range" min="0.5" max="6" step="0.5">
+          <input v-model.number="strokeWidth" class="form-input-range w-50 display-inline mr-2" type="range" min="0" max="6" step="0.5">
           <input v-model.number="strokeWidth" class="form-input w-25 display-inline" type="number">
         </div>
       </AccordionItem>
@@ -96,6 +96,9 @@
     </div>
 
     <div class="position-absolute bottom-0 p-2 w-100">
+      <code class="bg-gray-3 text-light p-2 mb-2 display-block round">
+          {{store.state.svgCode}}
+      </code>
       <button @click="store.createSVG" class="btn btn-primary w-100 mb-0">
         Get Code
       </button>
@@ -131,7 +134,9 @@ export default {
         return this.store.state.allPaths[this.store.state.selectedPathIndex].scale.x || 1;
       },
       set(val) {
-        this.store.updateScale(val, val);
+        if (val >= 0.1) {
+          this.store.updateScale(val, val); 
+        }
       }
     },
     strokeLinecap: {
@@ -184,6 +189,7 @@ export default {
 
       allPaths[selectedPathIndex].scale.x = 1;
       allPaths[selectedPathIndex].scale.y = 1;
+      this.store.historySnapshot();
     },
     updateCenter: function() {
       if(window.SELECTED_PATH) {
@@ -252,5 +258,10 @@ export default {
 
 .btn svg {
   vertical-align: text-bottom;
+}
+
+code {
+  max-height: 150px;
+  overflow: auto;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <path class="edit-path" :class="{active: isActive}" :d="dToString" fill="none" @click="handleClick" @mousedown="handleMouseDown" :transform="transform" ref="path"></path>
+  <path class="edit-path" :class="{active: isActive, 'select-tool': store.state.tool === 'SELECT' }" :d="dToString" fill="none" @click="handleClick" @mousedown="handleMouseDown" :transform="transform" ref="path"></path>
 </template>
 
 <script>
@@ -73,5 +73,9 @@ export default {
   stroke: #363bd2;
   stroke-width: 20px;
   opacity: 0;
+}
+
+.select-tool {
+  cursor: move;
 }
 </style>

@@ -23,6 +23,7 @@
                 :cx="segment.curve1.x * scaleX" 
                 :cy="segment.curve1.y  * scaleY" 
                 r="4" 
+                class="cursor-edit"
             ></circle>
             <path 
                 v-if="segment.type === 'C'" 
@@ -36,6 +37,7 @@
                 :cx="segment.curve2.x * scaleX" 
                 :cy="segment.curve2.y * scaleY" 
                 r="4" 
+                class="cursor-edit"
             ></circle>
 
             <!-- dest points -->
@@ -45,7 +47,7 @@
                 @mouseup="drawLine"
                 :x="segment.dest.x * scaleX - 5" 
                 :y="segment.dest.y * scaleY - 5" 
-                class="path-point"
+                class="path-point cursor-edit"
                 :class="{ active: segment.id === store.state.selectedPointId }"
                 :key="'point-' + segment.id"
                 width="10"
@@ -63,7 +65,7 @@
               :width="(path.bbox.width * scaleX) || 1"
               :height="(path.bbox.height * scaleY )|| 1"
               fill="none"
-              stroke="red"
+              stroke="#363bd2"
           ></rect>
         </g>
 
@@ -210,5 +212,13 @@ export default {
 
 .hide {
   visibility: hidden;
+}
+
+.cursor-edit {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="currentColor"><path data-v-076a7a29="" data-v-306af221="" d="M     5 5L     5 5L     14 25L     16 16L     25 13Z      " stroke-linecap="butt" stroke-width="2"></path></svg>'), auto;
+  cursor: -webkit-image-set(
+  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="currentColor"><path data-v-076a7a29="" data-v-306af221="" d="M     5 5L     5 5L     14 25L     16 16L     25 13Z      " stroke-linecap="butt" stroke-width="2"></path></svg>') 1x,
+  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="white" stroke="currentColor"><path data-v-076a7a29="" data-v-306af221="" d="M     5 5L     5 5L     14 25L     16 16L     25 13Z      " stroke-linecap="butt" stroke-width="2"></path></svg>') 2x
+), auto;
 }
 </style>

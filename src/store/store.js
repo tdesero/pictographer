@@ -1,4 +1,6 @@
 import Vue from 'vue';
+import createCircle from './createCircle';
+import createSVG from './createSVG';
 
 window.SELECTED_PATH = {};
 
@@ -59,7 +61,8 @@ const store = {
     viewBox: {x: 24, y: 24},
     clientStartPos: {},
     movePathStartPos: {}, //stores the path definition (all segments)
-    //clientMovePos: {}
+    //clientMovePos: {},
+    svgCode: '',
   },
 
   /**
@@ -116,6 +119,7 @@ const store = {
     point.y = event.clientY;
     point = point.matrixTransform(this.state.transformMatrix);
     if (this.state.snapToGrid) { point = roundPoint(point) }
+
     this.state.clientStartPos = {x: point.x, y: point.y};
     this.state.movePathStartPos = JSON.parse(JSON.stringify(this.state.allPaths[selectedPathIndex].definition));
 
@@ -391,6 +395,14 @@ const store = {
     this.state.currentPoint = allPaths[selectedPathIndex].definition[this.state.selectedPointIndex].dest;
   },
 
+  addCircle(center, radius) {
+    const d = createCircle(center, radius);
+    
+    this.createPath();
+    this.state.allPaths[this.state.selectedPathIndex].definition = d;
+    this.historySnapshot();
+  },
+
   updateBBox() {
     const { selectedPathIndex } = this.state;
     if (window.SELECTED_PATH && selectedPathIndex) {
@@ -413,7 +425,6 @@ const store = {
     this.state.allPaths[this.state.selectedPathIndex].rotation = val;
     this.updateRotationCenter();
     this.state.transformMatrix = window.SELECTED_PATH.getScreenCTM().inverse();
-    this.historySnapshot();
   },
 
   updateRotationCenter() {
@@ -481,7 +492,6 @@ const store = {
     this.state.allPaths[this.state.selectedPathIndex].scale.x = scaleX;
     this.state.allPaths[this.state.selectedPathIndex].scale.y = scaleY;
     this.state.transformMatrix = window.SELECTED_PATH.getScreenCTM().inverse();
-    this.historySnapshot();
   },
 
   historySnapshot() {
@@ -544,29 +554,9 @@ const store = {
   },
 
   createSVG() {
-    /* for now this provides just a very basic functionality */
-    const div = document.createElement('div')
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 
-    store.state.allPaths.forEach( p => {
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-
-      let d = "";
-      p.definition.forEach(s => {
-        d += [s.type, s.curve1.x, s.curve1.y, s.curve2.x, s.curve2.y, s.dest.x, s.dest.y].join(' ');
-      });
-  
-      path.setAttribute('d', d);
-      path.setAttribute('stroke-width', p.strokeWidth);
-      /* a lot to todos */
-      path.setAttribute('transform', 'rotate(' + p.rotation + ' ' + p.rotationCenter.x + ' ' + p.rotationCenter.y + ')');
-
-      svg.appendChild(path);
-    } )
-    
-    div.appendChild(svg);
-    
-    alert(div.innerHTML);
+    /* imported function: */
+    store.state.svgCode = createSVG();
   }
 };
 

@@ -1,7 +1,10 @@
 <template>
-  <div class="v_app-canvas position-relative shadow" @mouseup="endPointMove">
+  <div class="v_app-canvas position-relative shadow" @mouseup="endPointMove" :class="{'cursor-pen': store.state.tool === 'PEN'}">
     <svg 
-      class="w-100" stroke="black" :viewBox="'0 0 ' + store.state.viewBox.x + ' ' + store.state.viewBox.y">
+      class="w-100" 
+      stroke="black" 
+      :viewBox="'0 0 ' + store.state.viewBox.x + ' ' + store.state.viewBox.y"
+    >
       <SvgPath v-for="(path, index) in store.state.allPaths" :definition="path.definition" :path="path" :key="path.id" :id="path.id" :index="index" :ref="path.id"></SvgPath>
     </svg>
 
@@ -105,5 +108,11 @@ g.active {
   display: none;
 }
 
-
+.cursor-pen {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="currentColor"><path d="M 19 2 L 13 8 L 10 6 L 4 13 L 2 22 L 12 20 L 18 14 L 16 11 L 22 5 L 19 2 Z M 2 22 L 9 15 M 16 5 L 19 8 " stroke-width="2"></path></svg>') 0 200, auto;
+  cursor: -webkit-image-set(
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="currentColor"><path d="M 19 2 L 13 8 L 10 6 L 4 13 L 2 22 L 12 20 L 18 14 L 16 11 L 22 5 L 19 2 Z M 2 22 L 9 15 M 16 5 L 19 8 " stroke-width="2"></path></svg>') 1x,
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="white" stroke="currentColor"><path d="M 19 2 L 13 8 L 10 6 L 4 13 L 2 22 L 12 20 L 18 14 L 16 11 L 22 5 L 19 2 Z M 2 22 L 9 15 M 16 5 L 19 8 " stroke-width="2"></path></svg>') 2x
+  ) 0 200, auto;
+}
 </style>

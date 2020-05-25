@@ -1,5 +1,8 @@
 <template>
-  <div class="v_app-canvas position-relative shadow" @mouseup="endPointMove" :class="{'cursor-pen': store.state.tool === 'PEN'}">
+  <div  class="v_app-canvas position-relative shadow" 
+        @mouseup="endPointMove" 
+        :class="{'cursor-pen': store.state.tool === 'PEN', 'hide-grid': store.state.hideControls}" 
+        :style="{backgroundSize: 100/store.state.viewBox.x + '% ' + 100/store.state.viewBox.y + '%' }">
     <svg 
       class="w-100" 
       stroke="black" 
@@ -91,17 +94,29 @@ export default {
 <style scoped>
 .v_app-canvas {
   background-color: #FFF;
-  height: 100%;
+  /*height: 100%;*/
   width: 100%;
-  max-height: 500px;
+  /*max-height: 500px;*/
   max-width: 500px;
   overflow: visible;
   margin: auto;
   top: calc(50% - 250px);
+  background-image:
+    linear-gradient(to right,rgba(150, 150, 150, 0.35) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(150, 150, 150, 0.35) 1px, transparent 1px);
+  background-repeat: repeat;
+}
+
+svg {
+  display: block;
 }
 
 g.active {
   fill: blue;
+}
+
+.hide-grid {
+  background-image: none;
 }
 
 .hide {

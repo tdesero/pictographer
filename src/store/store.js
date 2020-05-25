@@ -225,7 +225,8 @@ const store = {
   handleMouseUp() {
     let {allPaths, selectedPathIndex, selectedPointIndex} = this.state;
 
-    if (this.state.isMovingPoint) {
+    /* if a point or path was moved add it to history */
+    if (this.state.isMovingPoint || this.state.isMovingPath || this.state.isDrawing) {
       this.historySnapshot()
     }
 

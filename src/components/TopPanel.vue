@@ -4,11 +4,18 @@
       <svg width="24" height="16" viewBox="0 0 24 16" fill="none" stroke="currentColor"><path d="M 21 17 C 21 13 18 10 14 10 L 4 10 M 7 6 L 3 10 L 7 14 " stroke-width="2"></path></svg>
     </button>
     <button 
-    :class="{ disabled: store.state.historyPos === -1 }"
-    :disabled="store.state.historyPos === -1"
-    class="btn btn-alt-gray-3 btn-primary btn-sm mb-0" @click="historyRedo">
+      :class="{ disabled: store.state.historyPos === -1 }"
+      :disabled="store.state.historyPos === -1"
+      class="btn btn-alt-gray-3 btn-primary btn-sm mb-0" @click="historyRedo"
+    >
       <svg width="24" height="16" viewBox="0 0 24 16" fill="none" stroke="currentColor"><path d="M 21 17 C 21 13 18 10 14 10 L 4 10 M 7 6 L 3 10 L 7 14 " stroke-width="2" transform="scale(-1,1) translate(-24,0)"></path></svg>
     </button>
+
+    Width
+    <input v-model="store.state.viewBox.x" class="form-input display-inline my-0" type="number" />
+
+    Height
+    <input v-model="store.state.viewBox.y" class="form-input display-inline my-0" type="number" />
 
     <div class="position-absolute right-0 top-0 py-2 px-4">
       <div class="form-group display-inline ml-2">

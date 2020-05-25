@@ -9,7 +9,10 @@ const createSVG = function() {
 
     svg.setAttribute('width', viewBox.x);
     svg.setAttribute('height', viewBox.y);
-    svg.setAttribute('viewBox', `0 0 ${viewBox.x} ${viewBox.y}`)
+    svg.setAttribute('viewBox', `0 0 ${viewBox.x} ${viewBox.y}`);
+
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('fill', 'none');
 
     store.state.allPaths.forEach( p => {
         if (!p.definition.length) return;

@@ -89,7 +89,7 @@ import EditPath from "./EditPath";
 export default {
   name: "ControlsLayer",
   components: {
-      EditPath
+      EditPath,
   },
   data: function() {
     return {
@@ -101,12 +101,12 @@ export default {
     }
   },
   mounted: function() {
-      this.private.width = this.$refs.svg.clientWidth;
-      this.private.height = this.$refs.svg.clientHeight;
-      window.addEventListener('resize', function() {
-            this.private.width = this.$refs.svg.clientWidth;
-            this.private.height = this.$refs.svg.clientHeight;
-      }.bind(this))
+    this.private.width = this.$refs.svg.clientWidth;
+    this.private.height = this.$refs.svg.clientHeight;
+    window.addEventListener('resize', function() {
+          this.private.width = this.$refs.svg.clientWidth;
+          this.private.height = this.$refs.svg.clientHeight;
+    }.bind(this))
   },
   computed: {
     scaleX: function() {
@@ -119,17 +119,33 @@ export default {
         const { height } = this.private;
         return height/viewBox.y;
     },
-    hasLivePreview: function() {
-    return ( !store.state.isFirstPoint && store.state.tool === 'PEN')
+    viewBoxX: function() {
+      return this.store.state.viewBox.x;
     },
+    viewBoxY: function() {
+      return this.store.state.viewBox.y;
+    },
+    hasLivePreview: function() {
+      return ( !store.state.isFirstPoint && store.state.tool === 'PEN')
+      },
     livePreview: function() {
-    const {currentPoint, livePreviewSegment} = this.store.state;
-    const { scaleX, scaleY } = this;
-    let d = ''
-    if (livePreviewSegment.dest) {
-        d = ['M', currentPoint.x * scaleX, currentPoint.y * scaleY, livePreviewSegment.type, livePreviewSegment.dest.x * scaleX, livePreviewSegment.dest.y * scaleY].join(' ');
+      const {currentPoint, livePreviewSegment} = this.store.state;
+      const { scaleX, scaleY } = this;
+      let d = ''
+      if (livePreviewSegment.dest) {
+          d = ['M', currentPoint.x * scaleX, currentPoint.y * scaleY, livePreviewSegment.type, livePreviewSegment.dest.x * scaleX, livePreviewSegment.dest.y * scaleY].join(' ');
+      }
+      return d;
     }
-    return d;
+  },
+  watch: {
+    viewBoxX: function() {
+      this.private.width = this.$refs.svg.clientWidth;
+      this.private.height = this.$refs.svg.clientHeight;
+    },
+    viewBoxY: function() {
+      this.private.width = this.$refs.svg.clientWidth;
+      this.private.height = this.$refs.svg.clientHeight;
     }
   },
   methods: {

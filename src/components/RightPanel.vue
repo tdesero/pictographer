@@ -28,7 +28,7 @@
         </div>
 
       </AccordionItem>
-      <AccordionItem :open="true" title="Stroke">
+      <AccordionItem :open="true" title="Style">
 
         <div class="form-group">
             <label class="form-label">Line End</label>
@@ -185,7 +185,7 @@ export default {
   },
   methods: {
     resetScaleVal: function() {
-      const { allPaths, selectedPathIndex }=this.store.state;
+      const { allPaths, selectedPathIndex } = this.store.state;
 
       allPaths[selectedPathIndex].scale.x = 1;
       allPaths[selectedPathIndex].scale.y = 1;

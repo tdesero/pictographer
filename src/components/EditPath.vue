@@ -1,5 +1,5 @@
 <template>
-  <path class="edit-path" :class="{active: isActive, 'select-tool': store.state.tool === 'SELECT' }" :d="dToString" fill="none" @click="handleClick" @mousedown="handleMouseDown" :transform="transform" ref="path"></path>
+  <path class="edit-path" :class="{active: isActive, 'select-tool': store.state.tool === 'SELECT' }" :d="dToString" :fill="path.hasFill ? 'currentColor' : 'none'" @click="handleClick" @mousedown="handleMouseDown(id)" :transform="transform" ref="path"></path>
 </template>
 
 <script>
@@ -52,8 +52,9 @@ export default {
     handleClick: function() {
       this.store.selectPath(this.id, this.index);
     },
-    handleMouseDown: function() {
-      if (this.store.state.tool === 'SELECT') {
+    handleMouseDown: function(id) {
+      const selectedPathId = this.store.state.selectedPathId;
+      if (this.store.state.tool === 'SELECT' && selectedPathId === id ) {
         this.store.state.isMovingPath = true;
       }
     }
@@ -73,6 +74,7 @@ export default {
   stroke: #363bd2;
   stroke-width: 20px;
   opacity: 0;
+  color: #000;
 }
 
 .select-tool {

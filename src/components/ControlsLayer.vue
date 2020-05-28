@@ -1,6 +1,7 @@
 <template>
   <svg
       @mousedown="handleMouseDown" 
+      @click="handleClick" 
       @mousemove="handleMouseMove"
       class="controls-layer position-absolute w-100 h-100 top-0 left-0" ref="svg"
       v-if="!this.store.state.hideControls"
@@ -10,6 +11,17 @@
         <g v-for="(path, index) in store.state.allPaths" :key="'group-' + path.id" :class="{active: path.id === store.state.selectedPathId}" :transform="transform(path)">
         
             <g v-for="(segment, segmentIndex) in path.definition" :key="'seg-' + segment.id" :class="{hide: (index !== store.state.selectedPathIndex) || (store.state.tool === 'SELECT')}" stroke="none" fill="#363bd2">
+
+            <!-- active segment -->
+            <path
+              id="active-segment"
+              v-if="segment.id === store.state.selectedPointId && segment.type !== 'Z' && segment.type !== 'M'"
+              :d="activeSegment"
+              stroke="#363bd2"
+              stroke-width="10"
+              fill="none"
+            ></path>
+
             <!-- curve point handles -->
             <path 
                 v-if="segment.type === 'C'" 
@@ -97,6 +109,7 @@ export default {
         private: {
             width: 0,
             height: 0,
+            shouldUnselect: false,
         }
     }
   },
@@ -136,6 +149,29 @@ export default {
           d = ['M', currentPoint.x * scaleX, currentPoint.y * scaleY, livePreviewSegment.type, livePreviewSegment.dest.x * scaleX, livePreviewSegment.dest.y * scaleY].join(' ');
       }
       return d;
+    },
+    activeSegment: function() {
+      const {allPaths, selectedPathIndex, selectedPointIndex} = this.store.state;
+      const { scaleX, scaleY } = this;
+      let d = 0
+      if (selectedPointIndex !== null && selectedPathIndex !== null) {
+          const {curve1, curve2, dest, type} = allPaths[selectedPathIndex].definition[selectedPointIndex];
+          if (type === 'M' || type === 'Z') return;
+          const startPoint = allPaths[selectedPathIndex].definition[selectedPointIndex-1].dest;
+
+          d = ['M', 
+                startPoint.x !== undefined ? startPoint.x * scaleX : '', 
+                startPoint.y !== undefined ? startPoint.y * scaleY : '', 
+                type, 
+                curve1.x !== undefined ? curve1.x * scaleX : '', 
+                curve1.y !== undefined ? curve1.y * scaleY : '', 
+                curve2.x !== undefined ? curve2.x * scaleX : '', 
+                curve2.y !== undefined ? curve2.y * scaleY : '', 
+                dest.x !== undefined ? dest.x * scaleX : '', 
+                dest.y !== undefined ? dest.y * scaleY : ''].join(' ');
+          console.log(d)
+      }
+      return d;
     }
   },
   watch: {
@@ -170,13 +206,20 @@ export default {
         this.store.state.isDrawing = false;
       }
     },
-    handleMouseDown(event) {
-        let {tool} = this.store.state;
-        console.log(event.target.matches('.controls-layer'))
-        if ( tool !== 'PEN' && event.target.matches('.controls-layer')) {
+    handleClick() {
+      let {tool} = this.store.state;
+      const {shouldUnselect} = this.private;
+      if ( tool !== 'PEN' && shouldUnselect) {
           this.store.unselectPath();
-        }
-        this.$emit('handleMouseDown', event)
+          this.private.shouldUnselect = false;
+      }
+    },
+    handleMouseDown(event) {
+      let {tool} = this.store.state;
+      if ( tool !== 'PEN' && event.target.matches('.controls-layer')) {
+          this.private.shouldUnselect = true;
+      }
+      this.$emit('handleMouseDown', event)
     },
     handleMouseMove(event) {
         this.$emit('handleMouseMove', event)
@@ -216,6 +259,7 @@ export default {
   stroke:#363bd2;
   stroke-width: 1px;
   fill: #FFF;
+  z-index: 99;
 }
 
 .path-point.active {
@@ -228,6 +272,11 @@ export default {
 
 .hide {
   visibility: hidden;
+}
+
+#active-segment {
+  pointer-events: none;
+  opacity: 0.5;
 }
 
 .cursor-edit {

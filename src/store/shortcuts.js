@@ -17,6 +17,9 @@ const shortcuts = function() {
             store.historyGoTo(store.state.historyPos);
         }
 
+        /* IMPORTANT: the following shortcuts should only be possible if they are not comming from an input field */
+        if (event.target.matches('input')) return
+
         /* tool shortcuts */
         if (event.key === 'e') {
             store.state.tool = "EDIT";

@@ -24,6 +24,7 @@ function emptyPath() {
     strokeLinecap: 'butt',
     strokeLinejoin: 'miter',
     strokeWidth: 2,
+    hasFill: false, 
   }
 }
 
@@ -235,9 +236,11 @@ const store = {
 
     this.state.isDrawing = false;
 
-    this.updateBBox();
-    this.updatePathCenter(allPaths[selectedPathIndex].bbox);
-    //this.updateRotationCenter();
+    if (selectedPathIndex !== null) {
+      this.updateBBox();
+      this.updatePathCenter(allPaths[selectedPathIndex].bbox);
+      //this.updateRotationCenter();
+    }
 
     if (selectedPathIndex !== null && selectedPointIndex !== null) {
       this.state.currentPoint = allPaths[selectedPathIndex].definition[selectedPointIndex].dest;
@@ -339,6 +342,7 @@ const store = {
 
     if (selectedPathIndex !== null) {
       this.state.allPaths.splice(selectedPathIndex, 1);
+      this.unselectPath();
     }
   },
 
@@ -409,6 +413,7 @@ const store = {
     if (window.SELECTED_PATH && selectedPathIndex) {
       const bbox = window.SELECTED_PATH.getBBox();
       this.state.allPaths[selectedPathIndex].bbox = bbox;
+      this.updatePathCenter(bbox);
     }
     if (this.debug) { console.log('updateBBox');}
   },
@@ -435,8 +440,9 @@ const store = {
   },
 
   bakeRotation() {
+    let pathIndex = this.state.selectedPathIndex;
     //const svg = document.querySelector('#app svg')
-    const {rotationCenter, rotation} = this.state.allPaths[this.state.selectedPathIndex];
+    const {rotationCenter, rotation} = this.state.allPaths[pathIndex];
 
     function rotatePoint(p, cx, cy, angle) {
       let pi = Math.PI;
@@ -457,7 +463,7 @@ const store = {
       return p;
     }
 
-    this.state.allPaths[this.state.selectedPathIndex].definition.forEach(s => {
+    this.state.allPaths[pathIndex].definition.forEach(s => {
       if (s.type === "C") {
         s.curve1 = rotatePoint( s.curve1, rotationCenter.x,  rotationCenter.y, rotation);  
         s.curve2 = rotatePoint( s.curve2, rotationCenter.x,  rotationCenter.y, rotation);
@@ -466,6 +472,8 @@ const store = {
     })
     this.state.allPaths[this.state.selectedPathIndex].rotation = 0;
     this.state.transformMatrix = window.SELECTED_PATH.getScreenCTM().inverse();
+
+    this.updateBBox();
     this.historySnapshot();
   },
 
@@ -493,6 +501,11 @@ const store = {
     this.state.allPaths[this.state.selectedPathIndex].scale.x = scaleX;
     this.state.allPaths[this.state.selectedPathIndex].scale.y = scaleY;
     this.state.transformMatrix = window.SELECTED_PATH.getScreenCTM().inverse();
+  },
+
+  resetScale() {
+    this.state.allPaths[this.state.selectedPathIndex].scale.x = 1;
+    this.state.allPaths[this.state.selectedPathIndex].scale.y = 1;
   },
 
   historySnapshot() {

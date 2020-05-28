@@ -70,9 +70,9 @@ export default {
         this.store.handleMouseMove(event, this.$refs[pathId][0].$el);
       }
     },
-    selectPath: function (id, index) {
+    /*selectPath: function (id, index) {
       this.store.selectPath(id, index);
-    },
+    },*/
     transform: function(path) {
       let t = '';
       if(path && path.rotation) {

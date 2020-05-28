@@ -1,12 +1,13 @@
 <template>
     <path 
+      class="svg-path"
       :class="{active: isActive}" 
-      :d="dToString" 
-      fill="none" 
+      :d="dToString"  
       :transform="transform" 
       :stroke-linecap="path.strokeLinecap"
       :stroke-linejoin="path.strokeLinejoin"
       :stroke-width="path.strokeWidth"
+      :fill="path.hasFill ? 'currentColor' : 'none'"
       ref="path"
       ></path>
 </template>
@@ -65,4 +66,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.svg-path {
+  color: black;
+}
 </style>

@@ -57,10 +57,13 @@ export default {
       }
     },
     handleMouseDown: function(event) {
+      if (this.store.debug) console.log('handleMouseDown', 'MainCanvas')
       let pathId = this.store.state.selectedPathId;
-      
+
       if (pathId) {
         this.store.handleMouseDown(event, this.$refs[pathId][0].$el);
+      } else {
+        this.store.handleMouseDown(event, null);
       }
     },
     handleMouseMove: function(event) {
@@ -70,9 +73,6 @@ export default {
         this.store.handleMouseMove(event, this.$refs[pathId][0].$el);
       }
     },
-    /*selectPath: function (id, index) {
-      this.store.selectPath(id, index);
-    },*/
     transform: function(path) {
       let t = '';
       if(path && path.rotation) {

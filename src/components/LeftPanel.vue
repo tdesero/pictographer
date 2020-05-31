@@ -43,11 +43,44 @@
         </template>
       </ShapeModal>
 
+      <!-- Star Shape with Modal -->
+      <ShapeModal btnTitle="Add Star" modalTitle="Create a Star" @confirm="addStar()">
+        <template v-slot:icon>
+          <svg width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" fill="none"><path d=" M 12.04799815248184 17.82773106066078 L 17.6635632622761 20.780008351010338 L 16.591085759324407 14.526984705835558 L 21.134173366167 10.098568770311253 L 14.855780707378965 9.186264915486026 L 12.04799815248184 3.4970760606607936 L 9.240215597584719 9.186264915486026 L 2.9618229387966863 10.09856877031125 L 7.504910545639265 14.526984705835558 L 6.432433042687578 20.780008351010338 L 12.04799815248184 17.82773106066078" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt"></path></svg>
+        </template>
+        <template v-slot:content>
+          <div class="form-group">
+            <label class="form-label display-inline mr-2">Radius 1</label>
+            <input 
+              class="form-input form-input-radius display-inline" 
+              v-model.number="starR1" 
+              type="number" 
+            />
+            <label class="form-label display-inline mr-2">Radius 2</label>
+            <input 
+              class="form-input form-input-radius display-inline" 
+              v-model.number="starR2" 
+              type="number" 
+            />
+            <label class="form-label display-inline mr-2">Arms</label>
+            <input 
+              class="form-input form-input-radius display-inline" 
+              v-model.number="starArms" 
+              type="number" 
+            />
+          </div>
+        </template>
+      </ShapeModal>
+
+      
       <button
-        @click="newPath"
-        class="btn btn-primary btn btn-primary btn-circle btn-xl"
-        title="New"
-      >+</button>
+        @click="store.copyPath()"
+        title="Copy"
+        class="btn btn-secondary btn btn-primary btn-circle btn-xl"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" fill="none"><path d=" M 3 7 L 17 7 L 17 21 L 3 21 Z" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt"></path><path d=" M 7 3 L 21 3 L 21 18" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt"></path></svg>
+      </button>
+
 
       <button
         @click="store.deleteAction()"
@@ -74,15 +107,17 @@ export default {
     return {
       store,
       circleRadius: 2,
+      starR1: 2,
+      starR2: 5,
+      starArms: 5,
     };
   },
   methods: {
-    newPath: function() {
-      this.store.createPath();
-      this.store.selectTool('PEN');
-    },
     addCircle: function() {
       this.store.addCircle({x: 12, y: 12}, this.circleRadius)
+    },
+    addStar: function() {
+      this.store.addStar({x: 12, y: 12}, this.starR1, this.starR2, this.starArms)
     }
   }
 };

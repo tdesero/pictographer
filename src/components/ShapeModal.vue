@@ -3,7 +3,7 @@
         <button
             @click="open = true"
             class="btn btn-primary btn btn-primary btn-circle btn-xl"
-            title="btnTitle"
+            :title="btnTitle"
             >
             <slot name="icon"></slot>
         </button>

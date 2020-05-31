@@ -1,5 +1,5 @@
 /* createCircle 
- * creates a path definition for a circle.
+ * creates (a path definition for) a circle.
  * the center has to be an object with x and y coordintates.
  * @param {object} center
  * @param {number} radius
@@ -94,13 +94,6 @@ const createCircle = function(center, radius) {
           x: s.x,
           y: s.y
         }
-      })
-    d.push({
-        type: 'Z',
-        id: createId() + 5,
-        curve1: {},
-        curve2: {},
-        dest: {}
       })
     return d;
 }

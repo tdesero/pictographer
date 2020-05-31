@@ -11,11 +11,11 @@
       <svg width="24" height="16" viewBox="0 0 24 16" fill="none" stroke="currentColor"><path d="M 21 17 C 21 13 18 10 14 10 L 4 10 M 7 6 L 3 10 L 7 14 " stroke-width="2" transform="scale(-1,1) translate(-24,0)"></path></svg>
     </button>
 
-    Width
-    <input v-model="store.state.viewBox.x" class="form-input display-inline my-0" type="number" />
+    <label class="mx-2">Width</label>
+    <input v-model="store.state.viewBox.x" class="canvas-size-input form-input display-inline my-0 bg-gray-3 text-light border-0" type="number" />
 
-    Height
-    <input v-model="store.state.viewBox.y" class="form-input display-inline my-0" type="number" />
+    <label class="mx-2">Height</label>
+    <input v-model="store.state.viewBox.y" class="canvas-size-input form-input display-inline my-0 bg-gray-3 text-light border-0" type="number" />
 
     <div class="position-absolute right-0 top-0 py-2 px-4">
       <div class="form-group display-inline ml-2">
@@ -78,5 +78,9 @@ export default {
 
 button:disabled {
   cursor: not-allowed;
+}
+
+.canvas-size-input {
+  width: 5rem;
 }
 </style>

@@ -34,6 +34,9 @@ export default {
       this.definition.forEach(s => {
         d += [s.type, s.curve1.x, s.curve1.y, s.curve2.x, s.curve2.y, s.dest.x, s.dest.y].join(' ');
       });
+      if (this.path.isClosed) {
+        d += " Z";
+      }
       return d;
     },
     isActive: function() {

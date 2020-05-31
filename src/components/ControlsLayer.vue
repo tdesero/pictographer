@@ -52,10 +52,10 @@
                 class="cursor-edit"
             ></circle>
 
-            <!-- dest points -->
+            <!-- dest points (square points, destinationselec) -->
             <rect
                 v-if="segment.type !== 'Z'"
-                @mousedown="pointHandleMouseDown(segment.id, segmentIndex, 'dest', path.id, index)"
+                @mousedown.stop="pointHandleMouseDown(segment.id, segmentIndex, 'dest', path.id, index)"
                 @mouseup="drawLine"
                 :x="segment.dest.x * scaleX - 5" 
                 :y="segment.dest.y * scaleY - 5" 
@@ -222,10 +222,11 @@ export default {
       this.$emit('handleMouseDown', event)
     },
     handleMouseMove(event) {
-        this.$emit('handleMouseMove', event)
+      this.$emit('handleMouseMove', event)
     },
     pointHandleMouseDown(segmentId, segmentIndex, pointType, pathId, pathIndex) {
-      const { tool, allPaths, selectedPointIndex, selectedPathId } = this.store.state;
+      if (this.store.debug) console.log('pointHandleMouseDown', 'ControlsLayer');
+      const { tool, allPaths, selectedPointIndex, selectedPathId, isFirstPoint } = this.store.state;
       let shouldJoin = false;
 
       const oldPointIsLast = function() {
@@ -235,7 +236,7 @@ export default {
         return segmentIndex === allPaths[pathIndex].definition.length - 1;
       }
 
-      if ( tool === 'PEN' && selectedPathId === pathId) {
+      if ( (tool === 'PEN') && (selectedPathId === pathId) && !isFirstPoint) {
         /* close path on first point & last point */
         if ( segmentIndex === 0 && oldPointIsLast) {
           shouldJoin = true;
@@ -243,11 +244,22 @@ export default {
           shouldJoin = true;
         }
       }
-      
-
-      this.selectPath(pathId, pathIndex);
-      this.startPointMove(segmentId, pointType); //sets selected point
       if (shouldJoin) { this.store.joinPoints(pathIndex); }
+
+      if ( tool !== 'PEN') {
+        this.selectPath(pathId, pathIndex);
+        this.startPointMove(segmentId, pointType); //sets selected point
+      }
+
+      if (tool === 'PEN') {
+        // if the point is first or last one...
+        if (segmentIndex === 0) {
+          this.store.continuePath(pathId, pathIndex, segmentId, segmentIndex);
+        } else if(newPointIsLast) {
+          this.store.continuePath(pathId, pathIndex, segmentId, segmentIndex);
+        }
+      }
+      
     }
   }
 };
@@ -276,7 +288,7 @@ export default {
 
 #active-segment {
   pointer-events: none;
-  opacity: 0.5;
+  opacity: 0.7;
 }
 
 .cursor-edit {

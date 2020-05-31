@@ -1,5 +1,6 @@
 import Vue from 'vue';
-import createCircle from './createCircle';
+import createCircle from './shapes/createCircle';
+import createStar from './shapes/createStar';
 import createSVG from './createSVG';
 
 window.SELECTED_PATH = {};
@@ -15,6 +16,7 @@ function emptyPath() {
   return {
     id: new Date().getTime(),
     definition: [],
+    isClosed: false,
     rotation: null,
     scale: {x: 1, y: 1},
     bbox: {},
@@ -53,15 +55,16 @@ const store = {
     selectedPointIndex: null,
     isMovingPoint: false,
     isMovingPath: false,
+    clientStartPos: {},
+    movePathStartPos: {}, //stores the path definition (all segments)
     svgPoint: {},
     isFirstPoint: true,
     isDrawing: false,
+    nextCurve: {},
     currentSegment: 'L',
     snapToGrid: true,
     hideControls: false,
     viewBox: {x: 24, y: 24},
-    clientStartPos: {},
-    movePathStartPos: {}, //stores the path definition (all segments)
     //clientMovePos: {},
     svgCode: '',
   },
@@ -94,14 +97,15 @@ const store = {
     if (this.debug) console.log("selectTool", tool);
     this.state.tool = tool;
 
-    if (tool === 'PEN' && this.state.selectedPathIndex === null) {
-      this.createPath();
+    if (tool === 'PEN') {
+      this.state.isFirstPoint = true;
     }
   },
 
   /**
    * handle mousedown depending on selected tool
    * expects the dom element of the currently selected path
+   * if no path selected it can be called with "null" instead
    * @param {object} event
    * @param {array} domElement
    * @public
@@ -111,7 +115,9 @@ const store = {
     const { selectedPointIndex, selectedPathIndex } = this.state;
     let pathLength;
 
-    this.state.transformMatrix = domElement.getScreenCTM().inverse();
+    if (domElement) {
+      this.state.transformMatrix = domElement.getScreenCTM().inverse();
+    }
     this.state.svgPoint = document.querySelector('#app svg').createSVGPoint();
 
     /* Tracking the point for path moving */
@@ -122,26 +128,33 @@ const store = {
     if (this.state.snapToGrid) { point = roundPoint(point) }
 
     this.state.clientStartPos = {x: point.x, y: point.y};
-    this.state.movePathStartPos = JSON.parse(JSON.stringify(this.state.allPaths[selectedPathIndex].definition));
-
     
     if (selectedPathIndex !== null) {
+      this.state.movePathStartPos = JSON.parse(JSON.stringify(this.state.allPaths[selectedPathIndex].definition));
       pathLength = this.state.allPaths[selectedPathIndex].definition.length;
     }
 
     switch(this.state.tool) {   
       case 'PEN':
         this.state.isDrawing = true;
-        if( (pathLength - 1) === selectedPointIndex) {
+        if( ((pathLength - 1) === selectedPointIndex)
+            && !this.state.isFirstPoint) {
           if (this.debug) console.log('end')
+
           this.addSegment(event, 'END');
-        } else if( selectedPointIndex === 0 ) {
+
+        } else if( (selectedPointIndex === 0)
+                    && !this.state.isFirstPoint) {
           if (this.debug) console.log('start')
+
           this.addSegment(event, 'START');
-        } else {
+
+        } else if (this.state.isFirstPoint) {
           if (this.debug) console.log('new')
+
           this.createPath()
           this.addSegment(event, 'NEW');
+
         }
         break;
       default:
@@ -168,7 +181,8 @@ const store = {
     /* Draw Bezier */
     if (this.state.tool === 'PEN' && this.state.isDrawing) {
       let { allPaths, selectedPathIndex, selectedPointIndex, snapToGrid } = this.state;
-      let fromPoint = allPaths[selectedPathIndex].definition[selectedPointIndex - 1].dest;
+      let dest = allPaths[selectedPathIndex].definition[selectedPointIndex].dest;
+      let oldCurve = {}
 
       let point = this.state.svgPoint;
       point.x = event.clientX;
@@ -176,13 +190,36 @@ const store = {
       point = point.matrixTransform(this.state.transformMatrix);
       if (snapToGrid) { point = roundPoint(point) }
 
-      allPaths[selectedPathIndex].definition[selectedPointIndex].type = 'C';
-      allPaths[selectedPathIndex].definition[selectedPointIndex].curve1 = { x: fromPoint.x, y: fromPoint.y };
-      allPaths[selectedPathIndex].definition[selectedPointIndex].curve2 = { x: point.x, y: point.y}
+      //subtract the difference to have a more intuitive curve while drawing
+      point.x = dest.x - (point.x - dest.x);
+      point.y = dest.y - (point.y - dest.y);
+
+      if (selectedPointIndex === 0) {
+        /* this is a bit confusing: as the new point is added at the beginning, the actual point is just a M (Moveto) Point with x,y coordinates. 
+         * So the origin is taken from the segment at index 1 and the curve is calculated from the segment at index 2 */
+        let from = allPaths[selectedPathIndex].definition[1];
+        let from2 = allPaths[selectedPathIndex].definition[2];
+        oldCurve.x = from.dest.x - (from2.curve1.x - from.dest.x) || from.dest.x;
+        oldCurve.y = from.dest.y - (from2.curve1.y - from.dest.y) || from.dest.y;
+
+        allPaths[selectedPathIndex].definition[1].type = 'C';
+        allPaths[selectedPathIndex].definition[1].curve1 = { x: point.x, y: point.y };
+        allPaths[selectedPathIndex].definition[1].curve2 = { x: oldCurve.x, y: oldCurve.y }
+      } else {
+        let from = allPaths[selectedPathIndex].definition[selectedPointIndex - 1];
+        oldCurve.x = from.dest.x - (from.curve2.x - from.dest.x) || from.dest.x;
+        oldCurve.y = from.dest.y - (from.curve2.y - from.dest.y) || from.dest.y;
+
+        allPaths[selectedPathIndex].definition[selectedPointIndex].type = 'C';
+        allPaths[selectedPathIndex].definition[selectedPointIndex].curve1 = { x: oldCurve.x, y: oldCurve.y };
+        allPaths[selectedPathIndex].definition[selectedPointIndex].curve2 = { x: point.x, y: point.y }
+      }
+      
     }
 
     /* moving point */
     if (this.state.isMovingPoint) {
+      const {selectedPathIndex, selectedPointIndex, selectedPointStep} = this.state;
       let point = this.state.svgPoint;
       point.x = event.clientX;
       point.y = event.clientY;
@@ -190,7 +227,7 @@ const store = {
       if (this.state.snapToGrid) { point = roundPoint(point) }
 
       /* this moves the current selected point */
-      this.state.allPaths[this.state.selectedPathIndex].definition[this.state.selectedPointIndex][this.state.selectedPointStep] = {x: point.x, y: point.y};
+      this.state.allPaths[selectedPathIndex].definition[selectedPointIndex][selectedPointStep] = {x: point.x, y: point.y};
     }
 
     /* moving path */
@@ -245,11 +282,12 @@ const store = {
     if (selectedPathIndex !== null && selectedPointIndex !== null) {
       this.state.currentPoint = allPaths[selectedPathIndex].definition[selectedPointIndex].dest;
     }
+
   },
 
   /* TODO where = 'END' || 'START' || 'NEW' */
   addSegment(event, where) {
-    if (this.debug) console.log("addSegment", event);
+    if (this.debug) console.log("addSegment", where);
 
     let { allPaths, selectedPathIndex, selectedPointIndex } = this.state;
 
@@ -293,7 +331,7 @@ const store = {
       })
       allPaths[selectedPathIndex].definition[selectedPointIndex + 1].type = 'L';
       this.state.selectedPointId = id;
-      this.state.isDrawing = false;
+      this.state.selectedPointIndex = 0;
     }
     if ( where === "NEW" ) {
       let id = new Date().getTime();
@@ -323,6 +361,17 @@ const store = {
     }
 
     this.historySnapshot();
+  },
+
+  continuePath(pathId, pathIndex, segmentId, segmentIndex) {
+    if (this.debug) console.log('continuePath');
+
+    this.state.selectedPathId = pathId;
+    this.state.selectedPathIndex = pathIndex;
+    this.state.selectedPointId = segmentId;
+    this.state.selectedPointIndex = segmentIndex;
+
+    this.state.isFirstPoint = false;
   },
 
   deleteAction() {
@@ -377,6 +426,9 @@ const store = {
     this.updateBBox();
 
     if (tool === "EDIT" || tool === "SELECT") {
+      if (this.state.selectedPathId !== id) {
+        this.unselectPoint();
+      }
       this.state.selectedPathId = id;
       this.state.selectedPathIndex = index;
     }
@@ -386,6 +438,11 @@ const store = {
     if (this.debug) console.log("unselectPath");
     this.state.selectedPathId = null
     this.state.selectedPathIndex = null;
+  },
+
+  unselectPoint() {
+    this.state.selectedPointIndex = null;
+    this.state.selectedPointId = null;
   },
 
   /* TODO */
@@ -405,6 +462,16 @@ const store = {
     
     this.createPath();
     this.state.allPaths[this.state.selectedPathIndex].definition = d;
+    this.state.allPaths[this.state.selectedPathIndex].isClosed = true;
+    this.historySnapshot();
+  },
+
+  addStar(center, outerRadius, innerRadius, arms) {
+    const d = createStar(center, outerRadius, innerRadius, arms);
+    
+    this.createPath();
+    this.state.allPaths[this.state.selectedPathIndex].definition = d;
+    this.state.allPaths[this.state.selectedPathIndex].isClosed = true;
     this.historySnapshot();
   },
 
@@ -560,17 +627,34 @@ const store = {
   },
 
   joinPoints(pathIndex) {
-    let closeSegment = Object.assign({}, this.state.allPaths[pathIndex].definition[0]);
-    closeSegment.type = 'Z';
-    closeSegment.dest = {};
-    closeSegment.id = new Date().getTime();
-    this.state.allPaths[pathIndex].definition.push(closeSegment);
+    this.state.allPaths[pathIndex].isClosed = true;
+  },
+
+  copyPath() {
+    const {selectedPathIndex} = this.state;
+    const copiedPath = JSON.parse(JSON.stringify(this.state.allPaths[selectedPathIndex]));
+    copiedPath.id = new Date().getTime();
+
+    this.state.allPaths.push(copiedPath);
+
+    this.selectPath(copiedPath.id, this.state.allPaths.length - 1);
+    this.unselectPoint();
   },
 
   createSVG() {
 
     /* imported function: */
     store.state.svgCode = createSVG();
+  },
+
+  exportSVG() {
+    const svgCode = createSVG();
+    const blob = new Blob([svgCode], {type: "image/svg+xml"});
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = 'export.svg';
+    a.click();
   }
 };
 

@@ -5,7 +5,9 @@ const createSVG = function() {
     const div = document.createElement('div')
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 
-    const viewBox = store.state.viewBox
+    const viewBox = store.state.viewBox;
+
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
 
     svg.setAttribute('width', viewBox.x);
     svg.setAttribute('height', viewBox.y);
@@ -23,6 +25,7 @@ const createSVG = function() {
             .join(' ')
             .replace(/\s+/g,' '); //remove whitespace caused by empty values
         });
+        if (p.isClosed) d += ' Z';
 
         path.setAttribute('d', d);
         path.setAttribute('stroke-width', p.strokeWidth);

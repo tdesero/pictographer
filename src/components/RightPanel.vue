@@ -93,23 +93,39 @@
             <span>Fill</span>
           </label>
         </div>
+
+        <div class="form-group">
+          <label class="form-checkbox">
+            <input v-model.number="isClosed" type="checkbox">
+            <i class="checkbox"></i>
+            <span>Close Path</span>
+          </label>
+        </div>
+
       </AccordionItem>
+
       <AccordionItem title="Segment Settings" v-if="segmentType !== 'M'">
           change to
-          <select v-model="segmentType">
+          <select class="round bg-gray-3 text-light" v-model="segmentType">
             <option value="L">Line</option>
             <option value="C">Bezier</option>
           </select>
       </AccordionItem>
+
     </div>
 
     <div class="position-absolute bottom-0 p-2 w-100">
       <code class="bg-gray-3 text-light p-2 mb-2 display-block round">
           {{store.state.svgCode}}
       </code>
-      <button @click="store.createSVG" class="btn btn-primary w-100 mb-0">
-        Get Code
-      </button>
+      <div class="btn-group">
+        <button @click="store.createSVG" class="btn btn-alt-gray-3 w-50 mb-0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none"><path d=" M 10 4 L 2 12 L 10 20" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt"></path><path d=" M 14 20 L 22 12 L 14 4.000000000000001" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt"></path></svg>
+        </button>
+        <button @click="store.exportSVG" class="btn btn-gray-3 w-50 mb-0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none"><path d=" M 12 3 L 12 15" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt"></path><path d=" M 8 11 L 12 15 L 16 11" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt"></path><path d=" M 3 17 L 3 21 L 21 21 L 21 17" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt"></path></svg>
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -178,6 +194,14 @@ export default {
       set(val) {
         this.store.state.allPaths[store.state.selectedPathIndex].hasFill = val;
       }
+    },
+    isClosed: {
+        get() {
+          return this.store.state.allPaths[store.state.selectedPathIndex].isClosed;
+        },
+        set(val) {
+          this.store.state.allPaths[store.state.selectedPathIndex].isClosed = val;
+        }
     },
     segmentType: {
       get() {
@@ -279,5 +303,6 @@ export default {
 code {
   max-height: 150px;
   overflow: auto;
+  word-wrap: break-word;
 }
 </style>

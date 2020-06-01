@@ -1,6 +1,6 @@
 <template>
   <div class="app-right-panel shadow position-absolute top-0 right-0 h-100">
-    <div class="accordion" v-if="store.state.selectedPathIndex != null">
+    <div class="accordion" v-if="store.state.selectedPathIndex !== null">
       <AccordionItem :open="true" title="Transformation">
         
         <div class="form-group">
@@ -31,7 +31,7 @@
       <AccordionItem :open="true" title="Style">
 
         <div class="form-group">
-            <label class="form-label">Line End</label>
+            <label class="form-label">Line Join</label>
             <label class="form-radio mr-3">
               <input v-model="strokeLinejoin" value="miter" type="radio" name="radio-linejoin">
               <i class="radio"></i>
@@ -87,33 +87,34 @@
         </div>
 
         <div class="form-group">
-          <label class="form-checkbox">
+          <label class="form-switch">
             <input v-model.number="hasFill" type="checkbox">
-            <i class="checkbox"></i>
-            <span>Fill</span>
+            <i class="switch"></i>
+            <span class="ml-1">Fill</span>
           </label>
         </div>
 
         <div class="form-group">
-          <label class="form-checkbox">
+          <label class="form-switch">
             <input v-model.number="isClosed" type="checkbox">
-            <i class="checkbox"></i>
-            <span>Close Path</span>
+            <i class="switch"></i>
+            <span class="ml-1">Close Path</span>
           </label>
         </div>
 
       </AccordionItem>
 
-      <AccordionItem title="Segment Settings" v-if="segmentType !== 'M'">
-          change to
-          <select class="round bg-gray-3 text-light" v-model="segmentType">
+      <AccordionItem title="Segment Settings" :open="true" v-if="(segmentType !== 'M') && (store.state.tool === 'EDIT') && store.state.selectedPointId">
+          Segment Type
+          <select class="round bg-gray-3 text-light p-1 mb-2" v-model="segmentType">
             <option value="L">Line</option>
-            <option value="C">Bezier</option>
+            <option value="C">Curve</option>
           </select>
 
           <br>
-          <button @click="store.splitSegment(0.5)">
-            split path
+          <button class="btn btn-primary" @click="store.splitSegment(0.5)">
+            <svg class="mr-1" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none"><path d=" M 2 2 L 2 6 L 6 6 L 6 2 L 2 2" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt" fill="none"></path><path d=" M 6 4 C 13 4 20 11 20 18" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt" fill="none"></path><path d=" M 18 18 L 18 22 L 22 22 L 22 18 L 18 18" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt" fill="none"></path><path d=" M 18 6 L 13 11" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt" fill="none"></path></svg>
+            Split Segment
           </button>
       </AccordionItem>
 

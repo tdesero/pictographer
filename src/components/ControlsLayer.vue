@@ -55,7 +55,7 @@
             <!-- dest points (square points, destinationselec) -->
             <rect
                 v-if="segment.type !== 'Z'"
-                @mousedown.stop="pointHandleMouseDown(segment.id, segmentIndex, 'dest', path.id, index)"
+                @mousedown="pointHandleMouseDown(segment.id, segmentIndex, 'dest', path.id, index)"
                 @mouseup="drawLine"
                 :x="segment.dest.x * scaleX - 5" 
                 :y="segment.dest.y * scaleY - 5" 
@@ -254,8 +254,10 @@ export default {
       if (tool === 'PEN') {
         // if the point is first or last one...
         if (segmentIndex === 0) {
+          event.stopPropagation();
           this.store.continuePath(pathId, pathIndex, segmentId, segmentIndex);
         } else if(newPointIsLast) {
+          event.stopPropagation();
           this.store.continuePath(pathId, pathIndex, segmentId, segmentIndex);
         }
       }

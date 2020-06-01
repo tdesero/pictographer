@@ -219,7 +219,7 @@ const store = {
 
     /* moving point */
     if (this.state.isMovingPoint) {
-      const {selectedPathIndex, selectedPointIndex, selectedPointStep} = this.state;
+      const {selectedPathIndex, selectedPointIndex, selectedPointStep, allPaths, movePathStartPos} = this.state;
       let point = this.state.svgPoint;
       point.x = event.clientX;
       point.y = event.clientY;
@@ -227,7 +227,24 @@ const store = {
       if (this.state.snapToGrid) { point = roundPoint(point) }
 
       /* this moves the current selected point */
-      this.state.allPaths[selectedPathIndex].definition[selectedPointIndex][selectedPointStep] = {x: point.x, y: point.y};
+      allPaths[selectedPathIndex].definition[selectedPointIndex][selectedPointStep] = {x: point.x, y: point.y};
+
+      if ( (selectedPointStep === 'dest') && !event.altKey) {
+        /* move the curve handles together with the destination point (IMPORTANT: IF ALT KEY IS NOT PRESSED!) */
+        let diff = {};
+        const type = allPaths[selectedPathIndex].definition[selectedPointIndex].type;
+        const nextType = allPaths[selectedPathIndex].definition[selectedPointIndex + 1] ? allPaths[selectedPathIndex].definition[selectedPointIndex + 1].type : null;
+        diff.x = point.x - this.state.clientStartPos.x;
+        diff.y = point.y - this.state.clientStartPos.y;
+        if ( type === 'C') {
+          allPaths[selectedPathIndex].definition[selectedPointIndex].curve2.x = movePathStartPos[selectedPointIndex].curve2.x + diff.x;
+          allPaths[selectedPathIndex].definition[selectedPointIndex].curve2.y = movePathStartPos[selectedPointIndex].curve2.y + diff.y;
+        }
+        if (nextType === 'C') {
+          allPaths[selectedPathIndex].definition[selectedPointIndex + 1].curve1.x = movePathStartPos[selectedPointIndex + 1].curve1.x + diff.x;
+          allPaths[selectedPathIndex].definition[selectedPointIndex + 1].curve1.y = movePathStartPos[selectedPointIndex + 1].curve1.y + diff.y;
+        }
+      }
     }
 
     /* moving path */

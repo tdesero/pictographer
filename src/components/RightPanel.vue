@@ -110,6 +110,11 @@
             <option value="L">Line</option>
             <option value="C">Bezier</option>
           </select>
+
+          <br>
+          <button @click="store.splitSegment(0.5)">
+            split path
+          </button>
       </AccordionItem>
 
     </div>

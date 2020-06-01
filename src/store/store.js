@@ -404,7 +404,7 @@ const store = {
       if ( selectedPointIndex === 0 ) {
 
         if (this.state.allPaths[selectedPathIndex].definition.length > 1) {
-          /* make the first point moveto ('M') instead of lineto ('L') */
+          /* make the recent first point moveto ('M') instead of lineto ('L') */
           this.state.allPaths[selectedPathIndex].definition[1].type = 'M';
           this.state.allPaths[selectedPathIndex].definition[1].curve1 = {};
           this.state.allPaths[selectedPathIndex].definition[1].curve2 = {};
@@ -641,13 +641,117 @@ const store = {
     this.unselectPoint();
   },
 
-  createSVG() {
+  splitSegment(distance) {
+    const {allPaths, selectedPointIndex, selectedPathIndex} = this.state
+    const selectedPointType = allPaths[selectedPathIndex].definition[selectedPointIndex].type;
 
+    if (selectedPointType === 'C') {
+      this.splitCurve(distance);
+    } else if (selectedPointType === 'L') {
+      this.splitLine(distance);
+    }
+  },
+
+  splitLine(distance) {
+    if (this.debug) console.log('splitLine', distance);
+    let id = new Date().getTime();
+    let dist = distance || 0.5;
+    const {selectedPathIndex, selectedPointIndex} = this.state;
+    const seg = this.state.allPaths[selectedPathIndex].definition[selectedPointIndex];
+    let newSeg;
+
+    //the original 2 points defining the bezier curve
+    const a = this.state.allPaths[selectedPathIndex].definition[selectedPointIndex-1].dest;
+    const b = seg.dest;
+
+    newSeg = {
+      type: 'L',
+      id: id,
+      curve1: {},
+      curve2: {},
+      dest: {x: b.x,y: b.y}
+    }
+    this.state.allPaths[selectedPathIndex].definition.splice(selectedPointIndex + 1, 0, newSeg);
+
+    b.x = a.x + (b.x - a.x) * dist;
+    b.y = a.y + (b.y - a.y) * dist;
+
+    // set the selected Point to the new created (this is better while drawing)
+    this.state.selectedPointId = id;
+    this.state.selectedPointIndex = selectedPointIndex + 1;
+
+    this.state.currentPoint = this.state.allPaths[selectedPathIndex].definition[selectedPointIndex + 1].dest;
+  },
+
+  /** 
+   * splitCurve
+   * @param {number} dist
+   * dist is the distance between the two points in a range from 0.0 to 1.0
+  */
+  splitCurve(distance) {
+    if (this.debug) console.log('splitCurve', distance);
+    let id = new Date().getTime();
+    /* see: https://stackoverflow.com/questions/18655135/divide-bezier-curve-into-two-equal-halves/18681336#18681336 */
+
+    let dist = distance || 0.5;
+    const {selectedPathIndex, selectedPointIndex} = this.state;
+    const seg = this.state.allPaths[selectedPathIndex].definition[selectedPointIndex];
+    let newSeg;
+
+    //the original 4 points defining the bezier curve
+    const a = this.state.allPaths[selectedPathIndex].definition[selectedPointIndex-1].dest;
+    const b = seg.curve1;
+    const c = seg.curve2;
+    const d = seg.dest;
+
+    //the new points
+    let e, f, g, h, j, k;
+
+    function calc(p1, p2) {
+      const p3 = {};
+      p3.x = (p1.x + p2.x) * dist;
+      p3.y = (p1.y + p2.y) * dist;
+      return p3;
+    }
+
+    e = calc(a, b);
+    f = calc(b, c);
+    g = calc(c, d);
+    h = calc(e, f);
+    j = calc(f, g);
+    k = calc(h, j);
+
+    newSeg = {
+      type: 'C',
+      id: id,
+      curve1: {x: j.x, y: j.y},
+      curve2: {x: g.x, y: g.y},
+      dest: {x: d.x,y: d.y}
+    }
+    this.state.allPaths[selectedPathIndex].definition.splice(selectedPointIndex + 1, 0, newSeg);
+
+    // mutating the original segment object should be done after
+    seg.curve1.x = e.x;
+    seg.curve1.y = e.y;
+    seg.curve2.x = h.x;
+    seg.curve2.y = h.y;
+    seg.dest.x = k.x;
+    seg.dest.y = k.y;
+
+    // set the selected Point to the new created (this is better while drawing)
+    this.state.selectedPointId = id;
+    this.state.selectedPointIndex = selectedPointIndex + 1;
+
+    this.state.currentPoint = this.state.allPaths[selectedPathIndex].definition[selectedPointIndex + 1].dest;
+  },
+
+  createSVG() {
     /* imported function: */
     store.state.svgCode = createSVG();
   },
 
   exportSVG() {
+    /* this actually doesn't store anything inside the state */
     const svgCode = createSVG();
     const blob = new Blob([svgCode], {type: "image/svg+xml"});
     const url = window.URL.createObjectURL(blob);

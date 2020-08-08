@@ -31,47 +31,55 @@
       
       </button>
 
-      <!-- Circle Shape with Modal -->
-      <ShapeModal btnTitle="Add Circle" modalTitle="Create a Circle" @confirm="addCircle()">
-        <template v-slot:icon>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M     2.4582000166892914 12.000000016689302C 2.4582000166892914 6.730209390751875 6.730209390751827 2.4582000166893003 12.000000016689302 2.4582000166893003C 17.26979064262678 2.4582000166893003 21.541800016689265 6.730209390751875 21.541800016689265 12.000000016689302C 21.541800016689265 17.26979064262674 17.26979064262678 21.541800016689308 12.000000016689302 21.541800016689308C 6.730209390751827 21.541800016689308 2.4582000166892914 17.26979064262674 2.4582000166892914 12.000000016689302Z     0.8400000166893005 0.8400000166893005" stroke-width="2"></path></svg>
-        </template>
-        <template v-slot:content>
-          <div class="form-group">
-            <label class="form-label display-inline mr-2">Radius</label>
-            <input class="form-input form-input-radius display-inline" v-model.number="circleRadius" type="number" />
-          </div>
-        </template>
-      </ShapeModal>
+      <div class="btn-hover-group position-relative mb-2">
+        <button class="btn btn-primary btn-circle btn-xl trigger m-0">
+        +
+        </button>
+        <div class="btn-hover-group-inner">
 
-      <!-- Star Shape with Modal -->
-      <ShapeModal btnTitle="Add Star" modalTitle="Create a Star" @confirm="addStar()">
-        <template v-slot:icon>
-          <svg width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" fill="none"><path d=" M 12.04799815248184 17.82773106066078 L 17.6635632622761 20.780008351010338 L 16.591085759324407 14.526984705835558 L 21.134173366167 10.098568770311253 L 14.855780707378965 9.186264915486026 L 12.04799815248184 3.4970760606607936 L 9.240215597584719 9.186264915486026 L 2.9618229387966863 10.09856877031125 L 7.504910545639265 14.526984705835558 L 6.432433042687578 20.780008351010338 L 12.04799815248184 17.82773106066078" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt"></path></svg>
-        </template>
-        <template v-slot:content>
-          <div class="form-group">
-            <label class="form-label display-inline mr-2">Radius 1</label>
-            <input 
-              class="form-input form-input-radius display-inline" 
-              v-model.number="starR1" 
-              type="number" 
-            />
-            <label class="form-label display-inline mr-2">Radius 2</label>
-            <input 
-              class="form-input form-input-radius display-inline" 
-              v-model.number="starR2" 
-              type="number" 
-            />
-            <label class="form-label display-inline mr-2">Arms</label>
-            <input 
-              class="form-input form-input-radius display-inline" 
-              v-model.number="starArms" 
-              type="number" 
-            />
-          </div>
-        </template>
-      </ShapeModal>
+            <!-- Circle Shape with Modal -->
+            <ShapeModal btnTitle="Add Circle" modalTitle="Create a Circle" @confirm="addCircle()">
+              <template v-slot:icon>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M     2.4582000166892914 12.000000016689302C 2.4582000166892914 6.730209390751875 6.730209390751827 2.4582000166893003 12.000000016689302 2.4582000166893003C 17.26979064262678 2.4582000166893003 21.541800016689265 6.730209390751875 21.541800016689265 12.000000016689302C 21.541800016689265 17.26979064262674 17.26979064262678 21.541800016689308 12.000000016689302 21.541800016689308C 6.730209390751827 21.541800016689308 2.4582000166892914 17.26979064262674 2.4582000166892914 12.000000016689302Z     0.8400000166893005 0.8400000166893005" stroke-width="2"></path></svg>
+              </template>
+              <template v-slot:content>
+                <div class="form-group">
+                  <label class="form-label display-inline mr-2">Radius</label>
+                  <input class="form-input form-input-radius display-inline" v-model.number="circleRadius" type="number" />
+                </div>
+              </template>
+            </ShapeModal>
+          <!-- Star Shape with Modal -->
+        <ShapeModal btnTitle="Add Star" modalTitle="Create a Star" @confirm="addStar()">
+          <template v-slot:icon>
+            <svg width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" fill="none"><path d=" M 12.04799815248184 17.82773106066078 L 17.6635632622761 20.780008351010338 L 16.591085759324407 14.526984705835558 L 21.134173366167 10.098568770311253 L 14.855780707378965 9.186264915486026 L 12.04799815248184 3.4970760606607936 L 9.240215597584719 9.186264915486026 L 2.9618229387966863 10.09856877031125 L 7.504910545639265 14.526984705835558 L 6.432433042687578 20.780008351010338 L 12.04799815248184 17.82773106066078" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt"></path></svg>
+          </template>
+          <template v-slot:content>
+            <div class="form-group">
+              <label class="form-label display-inline mr-2">Radius 1</label>
+              <input 
+                class="form-input form-input-radius display-inline" 
+                v-model.number="starR1" 
+                type="number" 
+              />
+              <label class="form-label display-inline mr-2">Radius 2</label>
+              <input 
+                class="form-input form-input-radius display-inline" 
+                v-model.number="starR2" 
+                type="number" 
+              />
+              <label class="form-label display-inline mr-2">Arms</label>
+              <input 
+                class="form-input form-input-radius display-inline" 
+                v-model.number="starArms" 
+                type="number" 
+              />
+            </div>
+          </template>
+        </ShapeModal>
+      </div>
+    </div>
+     
 
       
       <button
@@ -153,5 +161,55 @@ export default {
 
 .form-input-radius {
   width: 4rem;
+}
+
+.btn-hover-group-inner {
+  position: absolute;
+  white-space: nowrap;
+  top: 0;
+  padding-left: 6px;
+  min-width: 45.5px;
+  transition: 0.3s padding-left;
+  text-align: left;
+  border-radius: 999px;
+  z-index: -1;
+  pointer-events: all;
+}
+
+.btn-hover-group >>> .btn-circle:hover {
+  transform: unset !important;
+}
+
+.btn-hover-group-inner .shape-modal {
+  position: relative;
+  display: inline-block;
+  margin-right: -43.5px;
+  margin-left: 0;
+  margin-bottom: 0;
+  transition: .3s margin;
+  opacity: 0.35;
+}
+    
+.btn-hover-group-inner .btn:nth-child(1) {
+  z-index: 10;
+}
+.btn-hover-group-inner .btn:nth-child(2) {
+  z-index: 9;
+}
+.btn-hover-group-inner .btn:nth-child(3) {
+  z-index: 8;
+}
+.btn-hover-group-inner .btn:nth-child(4) {
+  z-index: 7;
+}
+
+.btn-hover-group:hover .btn-hover-group-inner {
+    padding-left: 55px;
+  }
+  
+.btn-hover-group:hover .shape-modal {
+  margin-left: 0;
+  margin-right: 0.5rem;
+  opacity: 1;
 }
 </style>

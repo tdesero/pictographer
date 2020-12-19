@@ -254,6 +254,7 @@ export default {
   overflow-y: auto;
   width: 250px;
   background-color: #333;
+  z-index: 1;
 }
 
 .accordion {

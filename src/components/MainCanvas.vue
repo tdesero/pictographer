@@ -2,7 +2,10 @@
   <div  class="v_app-canvas position-relative shadow" 
         @mouseup="endPointMove" 
         :class="{'cursor-pen': store.state.tool === 'PEN', 'hide-grid': store.state.hideControls}" 
-        :style="{backgroundSize: 100/store.state.viewBox.x + '% ' + 100/store.state.viewBox.y + '%' }">
+        :style="{
+          backgroundSize: 100/store.state.viewBox.x + '% ' + 100/store.state.viewBox.y + '%', 
+          width: store.state.zoom > 0 ? store.state.viewBox.x * store.state.zoom + 'px' : 'auto',
+          maxWidth: store.state.zoom > 0 ? 'initial' : '500px' }">
     <svg 
       class="w-100" 
       stroke="black" 
@@ -97,7 +100,7 @@ export default {
   /*height: 100%;*/
   width: 100%;
   /*max-height: 500px;*/
-  max-width: 500px;
+  /*max-width: 500px;*/
   overflow: visible;
   margin: auto;
   top: calc(50% - 250px);

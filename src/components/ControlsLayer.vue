@@ -119,6 +119,7 @@ export default {
     window.addEventListener('resize', function() {
           this.private.width = this.$refs.svg.clientWidth;
           this.private.height = this.$refs.svg.clientHeight;
+          console.log('resize')
     }.bind(this))
   },
   computed: {
@@ -137,6 +138,9 @@ export default {
     },
     viewBoxY: function() {
       return this.store.state.viewBox.y;
+    },
+    zoom: function() {
+      return this.store.state.zoom;
     },
     hasLivePreview: function() {
       return ( !store.state.isFirstPoint && store.state.tool === 'PEN')
@@ -180,6 +184,10 @@ export default {
       this.private.height = this.$refs.svg.clientHeight;
     },
     viewBoxY: function() {
+      this.private.width = this.$refs.svg.clientWidth;
+      this.private.height = this.$refs.svg.clientHeight;
+    },
+    zoom: function() {
       this.private.width = this.$refs.svg.clientWidth;
       this.private.height = this.$refs.svg.clientHeight;
     }

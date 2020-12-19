@@ -17,6 +17,19 @@
     <label class="mx-2">Height</label>
     <input v-model="store.state.viewBox.y" class="canvas-size-input form-input display-inline my-0 bg-gray-3 text-light border-0" type="number" />
 
+    <label class="mx-2">Zoom</label>
+    <select v-model="store.state.zoom" 
+        class="canvas-size-input form-input display-inline my-0 bg-gray-3 text-light border-0" 
+        type="number"
+    >
+      <option value="0">auto</option>
+      <option value="1">100%</option>
+      <option value="2">200%</option>
+      <option value="4">400%</option>
+      <option value="10">1000%</option>
+      <option value="20">2000%</option>
+    </select>
+
     <div class="display-inline py-2 px-4">
       <div class="form-group display-inline ml-2">
         <label class="form-switch">

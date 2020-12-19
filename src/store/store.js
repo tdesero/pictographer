@@ -67,6 +67,7 @@ const store = {
     viewBox: {x: 24, y: 24},
     //clientMovePos: {},
     svgCode: '',
+    zoom: 20,
   },
 
   /**

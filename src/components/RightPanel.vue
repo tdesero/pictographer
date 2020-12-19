@@ -32,52 +32,58 @@
 
         <div class="form-group">
             <label class="form-label">Line Join</label>
-            <label class="form-radio mr-3">
-              <input v-model="strokeLinejoin" value="miter" type="radio" name="radio-linejoin">
-              <i class="radio"></i>
-              <span>
-                <svg height="24" width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 21 21 L 3 21 L 3 3 L 21 3 L 21 21 Z M 12 21 L 12 12 L 21 12 " stroke-width="2"></path></svg>
-              </span>
-            </label>
-            <label class="form-radio mr-3">
-              <input v-model="strokeLinejoin" value="round" type="radio" name="radio-linejoin">
-              <i class="radio"></i>
-              <span>
-                <svg height="24" width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 21 21 L 3 21 S 3 11 3 11 C 3 6 6 3 11 3 L 21 3 L 21 21 Z M 12 21 L 12 12 L 21 12 " stroke-width="2"></path></svg>
-              </span>
-            </label>
-            <label class="form-radio mr-3">
-              <input v-model="strokeLinejoin" value="bevel" type="radio" name="radio-linejoin">
-              <i class="radio"></i>
-              <span>
-                <svg height="24" width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 21 21 L 3 21 L 3 11 L 11 3 L 21 3 L 21 21 Z M 12 21 L 12 12 L 21 12 " stroke-width="2"></path></svg>
-              </span>
-            </label>
+
+            <div class="btn-group">
+              <label class="btn btn-alt-gray-3">
+                <input v-model="strokeLinejoin" value="miter" type="radio" name="radio-linejoin">
+                <i class="radio"></i>
+                <span>
+                  <svg height="24" width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 21 21 L 3 21 L 3 3 L 21 3 L 21 21 Z M 12 21 L 12 12 L 21 12 " stroke-width="2"></path></svg>
+                </span>
+              </label>
+              <label class="btn btn-alt-gray-3">
+                <input v-model="strokeLinejoin" value="round" type="radio" name="radio-linejoin">
+                <i class="radio"></i>
+                <span>
+                  <svg height="24" width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 21 21 L 3 21 S 3 11 3 11 C 3 6 6 3 11 3 L 21 3 L 21 21 Z M 12 21 L 12 12 L 21 12 " stroke-width="2"></path></svg>
+                </span>
+              </label>
+              <label class="btn btn-alt-gray-3">
+                <input v-model="strokeLinejoin" value="bevel" type="radio" name="radio-linejoin">
+                <i class="radio"></i>
+                <span>
+                  <svg height="24" width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 21 21 L 3 21 L 3 11 L 11 3 L 21 3 L 21 21 Z M 12 21 L 12 12 L 21 12 " stroke-width="2"></path></svg>
+                </span>
+              </label>
+            </div>
           </div>
 
         <div class="form-group">
             <label class="form-label">Line End</label>
-            <label class="form-radio mr-3">
-              <input v-model="strokeLinecap" value="round" type="radio" name="radio-linecap">
-              <i class="radio"></i>
-              <span>
-                <svg height="24" width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 21 21 L 11 21 C 0 21 0 3 11 3 L 21 3 L 21 21 Z M 12 12 L 21 12 Z M 12 15 L 12 9 M 11 3 " stroke-width="2"></path></svg>
-              </span>
-            </label>
-            <label class="form-radio mr-3">
-              <input v-model="strokeLinecap" value="butt" type="radio" name="radio-linecap">
-              <i class="radio"></i>
-              <span>
-                <svg height="24" width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 21 21 L 11 21 L 11 3 L 21 3 L 21 21 Z M 12 12 L 21 12 Z M 12 15 L 12 9 " stroke-width="2"></path></svg>
-              </span>
-            </label>
-            <label class="form-radio mr-3">
-              <input v-model="strokeLinecap" value="square" type="radio" name="radio-linecap">
-              <i class="radio"></i>
-              <span>
-                <svg height="24" width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 21 21 L 3 21 L 3 3 L 21 3 L 21 21 Z M 12 12 L 21 12 Z M 12 15 L 12 9 " stroke-width="2"></path></svg>
-              </span>
-            </label>
+
+            <div class="btn-group">
+              <label class="btn btn-alt-gray-3">
+                <input v-model="strokeLinecap" value="round" type="radio" name="radio-linecap">
+                <i class="radio"></i>
+                <span>
+                  <svg height="24" width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 21 21 L 11 21 C 0 21 0 3 11 3 L 21 3 L 21 21 Z M 12 12 L 21 12 Z M 12 15 L 12 9 M 11 3 " stroke-width="2"></path></svg>
+                </span>
+              </label>
+              <label class="btn btn-alt-gray-3">
+                <input v-model="strokeLinecap" value="butt" type="radio" name="radio-linecap">
+                <i class="radio"></i>
+                <span>
+                  <svg height="24" width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 21 21 L 11 21 L 11 3 L 21 3 L 21 21 Z M 12 12 L 21 12 Z M 12 15 L 12 9 " stroke-width="2"></path></svg>
+                </span>
+              </label>
+              <label class="btn btn-alt-gray-3">
+                <input v-model="strokeLinecap" value="square" type="radio" name="radio-linecap">
+                <i class="radio"></i>
+                <span>
+                  <svg height="24" width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M 21 21 L 3 21 L 3 3 L 21 3 L 21 21 Z M 12 12 L 21 12 Z M 12 15 L 12 9 " stroke-width="2"></path></svg>
+                </span>
+              </label>
+            </div>
           </div>
 
         <div class="form-group">
@@ -119,11 +125,11 @@
       </AccordionItem>
 
       <AccordionItem title="Export" :open="true">
-          <code class="bg-gray-3 text-light p-2 mb-2 display-block round">
+          <code class="bg-gray-3 text-light p-2 mb-2 display-block round" id="svg-code-output">
               {{store.state.svgCode}}
           </code>
           <div class="btn-group">
-            <button @click="store.createSVG" class="btn btn-alt-gray-3 w-50 mb-0 float-none">
+            <button @click="createSVGCode" class="btn btn-alt-gray-3 w-50 mb-0 float-none">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none"><path d=" M 10 4 L 2 12 L 10 20" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt"></path><path d=" M 14 20 L 22 12 L 14 4.000000000000001" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt"></path></svg>
             </button>
             <button @click="store.exportSVG" class="btn btn-gray-3 w-50 mb-0 float-none">
@@ -243,6 +249,20 @@ export default {
     },
     bakeRotation: function() {
       this.store.bakeRotation();
+    },
+    createSVGCode: function() {
+      this.store.createSVG();
+
+      /* copy to clipboard 
+        not perfect but it works: as the state is updated asynch i wait 100ms to copy to clipboard*/
+      setTimeout(() => {
+        var range = document.createRange();
+        range.selectNode(document.getElementById("svg-code-output"));
+        window.getSelection().removeAllRanges(); // clear current selection
+        window.getSelection().addRange(range);
+        document.execCommand("copy");
+        window.getSelection().removeAllRanges(); // clear current selection
+      }, 100);
     }
   }
 };
@@ -264,6 +284,35 @@ export default {
 .accordion-item {
   color: #DDD;
   border-color: #444;
+}
+
+.btn-group {
+  display: flex;
+}
+
+.btn-group .btn {
+  flex: 1;
+}
+
+.btn input[type=radio] {
+  display: none;
+}
+
+.btn input[type=radio]:checked+.radio {
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: #666;
+  left: 0;
+  top: 0;
+  border-radius: inherit;
+}
+
+.btn input[type=radio]:checked~span {
+  position: relative;
+  z-index: 1;
+  color: white;
 }
 
 .form-input-range {

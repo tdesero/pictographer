@@ -2,6 +2,8 @@ import Vue from 'vue';
 import createCircle from './shapes/createCircle';
 import createStar from './shapes/createStar';
 import createSVG from './createSVG';
+import { roundPoint } from './util/roundPoint';
+import { emptyPath } from './emptyPath';
 
 window.SELECTED_PATH = {};
 
@@ -11,32 +13,6 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
   return toElement.getScreenCTM().inverse().multiply(this.getScreenCTM());
 
 };
-
-function emptyPath() {
-  return {
-    id: new Date().getTime(),
-    definition: [],
-    isClosed: false,
-    rotation: null,
-    scale: {x: 1, y: 1},
-    bbox: {},
-    center: {},
-    rotationCenter: {},
-    translate: {x: null, y: null},
-    strokeLinecap: 'butt',
-    strokeLinejoin: 'miter',
-    strokeWidth: 2,
-    hasFill: false, 
-  }
-}
-
-function roundPoint(point) {
-  let newPoint = {}
-  newPoint.x = Math.round(point.x);
-  newPoint.y = Math.round(point.y);
-
-  return newPoint;
-}
 
 const store = {
   debug: true,
@@ -191,29 +167,29 @@ const store = {
       point = point.matrixTransform(this.state.transformMatrix);
       if (snapToGrid) { point = roundPoint(point) }
 
-      //subtract the difference to have a more intuitive curve while drawing
+      // subtract the difference to have a more intuitive curve while drawing
       point.x = dest.x - (point.x - dest.x);
       point.y = dest.y - (point.y - dest.y);
 
       if (selectedPointIndex === 0) {
         /* this is a bit confusing: as the new point is added at the beginning, the actual point is just a M (Moveto) Point with x,y coordinates. 
          * So the origin is taken from the segment at index 1 and the curve is calculated from the segment at index 2 */
-        let from = allPaths[selectedPathIndex].definition[1];
-        let from2 = allPaths[selectedPathIndex].definition[2];
+        let from = this.getSegment(selectedPathIndex, 1);
+        let from2 = this.getSegment(selectedPathIndex, 2);
         oldCurve.x = from.dest.x - (from2.curve1.x - from.dest.x) || from.dest.x;
         oldCurve.y = from.dest.y - (from2.curve1.y - from.dest.y) || from.dest.y;
 
-        allPaths[selectedPathIndex].definition[1].type = 'C';
-        allPaths[selectedPathIndex].definition[1].curve1 = { x: point.x, y: point.y };
-        allPaths[selectedPathIndex].definition[1].curve2 = { x: oldCurve.x, y: oldCurve.y }
+        this.updateType('C', selectedPathIndex, 1);
+        this.updateCurve1({ x: point.x, y: point.y }, selectedPathIndex, 1);
+        this.updateCurve2({ x: oldCurve.x, y: oldCurve.y }, selectedPathIndex, 1);
       } else {
-        let from = allPaths[selectedPathIndex].definition[selectedPointIndex - 1];
+        let from = this.getSegment(selectedPathIndex, selectedPointIndex - 1);
         oldCurve.x = from.dest.x - (from.curve2.x - from.dest.x) || from.dest.x;
         oldCurve.y = from.dest.y - (from.curve2.y - from.dest.y) || from.dest.y;
 
-        allPaths[selectedPathIndex].definition[selectedPointIndex].type = 'C';
-        allPaths[selectedPathIndex].definition[selectedPointIndex].curve1 = { x: oldCurve.x, y: oldCurve.y };
-        allPaths[selectedPathIndex].definition[selectedPointIndex].curve2 = { x: point.x, y: point.y }
+        this.updateType('C');
+        this.updateCurve1({ x: oldCurve.x, y: oldCurve.y });
+        this.updateCurve2({ x: point.x, y: point.y });
       }
       
     }
@@ -231,19 +207,22 @@ const store = {
       allPaths[selectedPathIndex].definition[selectedPointIndex][selectedPointStep] = {x: point.x, y: point.y};
 
       if ( (selectedPointStep === 'dest') && !event.altKey) {
-        /* move the curve handles together with the destination point (IMPORTANT: IF ALT KEY IS NOT PRESSED!) */
+        /* move the curve handles together with the destination point (if ALT-key is not pressed) */
         let diff = {};
-        const type = allPaths[selectedPathIndex].definition[selectedPointIndex].type;
-        const nextType = allPaths[selectedPathIndex].definition[selectedPointIndex + 1] ? allPaths[selectedPathIndex].definition[selectedPointIndex + 1].type : null;
+        const type = this.getSegment().type;
+        const nextSegment = this.getSegment(selectedPathIndex, selectedPointIndex + 1);
+        const nextType = nextSegment ? nextSegment.type : null;
         diff.x = point.x - this.state.clientStartPos.x;
         diff.y = point.y - this.state.clientStartPos.y;
         if ( type === 'C') {
-          allPaths[selectedPathIndex].definition[selectedPointIndex].curve2.x = movePathStartPos[selectedPointIndex].curve2.x + diff.x;
-          allPaths[selectedPathIndex].definition[selectedPointIndex].curve2.y = movePathStartPos[selectedPointIndex].curve2.y + diff.y;
+          const x = movePathStartPos[selectedPointIndex].curve2.x + diff.x;
+          const y = movePathStartPos[selectedPointIndex].curve2.y + diff.y;
+          this.updateCurve2({x, y});
         }
         if (nextType === 'C') {
-          allPaths[selectedPathIndex].definition[selectedPointIndex + 1].curve1.x = movePathStartPos[selectedPointIndex + 1].curve1.x + diff.x;
-          allPaths[selectedPathIndex].definition[selectedPointIndex + 1].curve1.y = movePathStartPos[selectedPointIndex + 1].curve1.y + diff.y;
+          const x = movePathStartPos[selectedPointIndex + 1].curve1.x + diff.x;
+          const y = movePathStartPos[selectedPointIndex + 1].curve1.y + diff.y;
+          this.updateCurve1({x, y}, selectedPathIndex, selectedPointIndex + 1);
         }
       }
     }
@@ -288,7 +267,6 @@ const store = {
 
     this.state.isMovingPoint = false;
     this.state.isMovingPath = false;
-
     this.state.isDrawing = false;
 
     if (selectedPathIndex !== null) {
@@ -423,9 +401,9 @@ const store = {
 
         if (this.state.allPaths[selectedPathIndex].definition.length > 1) {
           /* make the recent first point moveto ('M') instead of lineto ('L') */
-          this.state.allPaths[selectedPathIndex].definition[1].type = 'M';
-          this.state.allPaths[selectedPathIndex].definition[1].curve1 = {};
-          this.state.allPaths[selectedPathIndex].definition[1].curve2 = {};
+          this.updateType('M', selectedPathIndex, 1);
+          this.updateCurve1({}, selectedPathIndex, 1);
+          this.updateCurve2({}, selectedPathIndex, 1);
         }
         
       }
@@ -459,6 +437,7 @@ const store = {
   },
 
   unselectPoint() {
+    if (this.debug) console.log("unselectPoint");
     this.state.selectedPointIndex = null;
     this.state.selectedPointId = null;
   },
@@ -475,12 +454,53 @@ const store = {
     this.state.currentPoint = allPaths[selectedPathIndex].definition[this.state.selectedPointIndex].dest;
   },
 
+  getPath(pathIndex = this.state.selectedPathIndex) {
+    return this.state.allPaths[pathIndex]
+  },
+
+  // TODO: use the word "segment" everywhere instead of "point" --> atm it's confusing
+  getSegment(
+    pathIndex = this.state.selectedPathIndex,
+    pointIndex = this.state.selectedPointIndex,
+  ) {
+    return this.state.allPaths[pathIndex].definition[pointIndex];
+  },
+
+  updateType(
+    segmentType,
+    pathIndex = this.state.selectedPathIndex, 
+    pointIndex = this.state.selectedPointIndex,
+  ) {
+    this.state.allPaths[pathIndex].definition[pointIndex].type = segmentType;
+  },
+
+  updateCurve1(
+    coordinates,
+    pathIndex = this.state.selectedPathIndex, 
+    pointIndex = this.state.selectedPointIndex,
+  ) {
+    this.state.allPaths[pathIndex].definition[pointIndex].curve1 = coordinates;
+  },
+
+  updateCurve2(
+    coordinates,
+    pathIndex = this.state.selectedPathIndex, 
+    pointIndex = this.state.selectedPointIndex,
+  ) {
+    this.state.allPaths[pathIndex].definition[pointIndex].curve2 = coordinates;
+  },
+
+  updateDest() {
+    // TODO
+    return;
+  },
+
   addCircle(center, radius) {
     const d = createCircle(center, radius);
     
     this.createPath();
-    this.state.allPaths[this.state.selectedPathIndex].definition = d;
-    this.state.allPaths[this.state.selectedPathIndex].isClosed = true;
+    this.getPath().definition = d;
+    this.getPath().isClosed = true;
     this.historySnapshot();
   },
 
@@ -488,8 +508,8 @@ const store = {
     const d = createStar(center, outerRadius, innerRadius, arms);
     
     this.createPath();
-    this.state.allPaths[this.state.selectedPathIndex].definition = d;
-    this.state.allPaths[this.state.selectedPathIndex].isClosed = true;
+    this.getPath().definition = d;
+    this.getPath().isClosed = true;
     this.historySnapshot();
   },
 

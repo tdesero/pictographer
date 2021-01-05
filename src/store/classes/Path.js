@@ -1,8 +1,9 @@
+import { id } from '../util/id';
 
 class Segment {
   constructor(options) {
       this.type = options.type;
-      this.id = new Date().getTime();
+      this.id = id();
       this.curve1 = options.curve1 || {};
       this.curve2 = options.curve2 || {};
       this.dest = options.dest; // object with x & y
@@ -11,7 +12,7 @@ class Segment {
 
 export class Path {
   constructor() {
-    this.id= new Date().getTime();
+    this.id= id();
     this.definition= [];
     this.isClosed= false;
     this.rotation= null;

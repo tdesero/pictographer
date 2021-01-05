@@ -15,6 +15,14 @@ import { polyfill } from './util/polyfill';
 polyfill();
 window.SELECTED_PATH = {}; // this is bad practice i guess but i need this globally every now and then...
 
+// define all Tools as Constants
+const TOOLS = {
+  PEN: 'PEN',
+  EDIT: 'EDIT',
+  SELECT: 'SELECT',
+  RECT: 'RECT',
+}
+
 // store
 const store = {
   debug: true,
@@ -40,7 +48,6 @@ const store = {
 
   /**
    * select tool
-   * 'PEN', 'CIRCLE', 'RECT', 'EDIT', 'BBOX', 'NONE'
    * @param {string} tool
    * @public
    */
@@ -48,7 +55,8 @@ const store = {
     if (this.debug) console.log("selectTool", tool);
     this.state.tool = tool;
 
-    if (tool === 'PEN') {
+    if ((tool === TOOLS.PEN) ||
+        (tool === TOOLS.RECT)) {
       this.state.isFirstPoint = true;
     }
   },
@@ -86,7 +94,7 @@ const store = {
     }
 
     switch(this.state.tool) {   
-      case 'PEN':
+      case TOOLS.PEN:
         this.state.isDrawing = true;
         if( ((pathLength - 1) === selectedPointIndex)
             && !this.state.isFirstPoint) {
@@ -103,10 +111,21 @@ const store = {
         } else if (this.state.isFirstPoint) {
           if (this.debug) console.log('new')
 
-          this.createPath()
+          this.createPath();
           this.addSegment(event, 'NEW');
-
         }
+        break;
+      case TOOLS.RECT:
+        this.createPath();
+
+        // Initialize the Segments
+        this.addSegment(event, 'NEW');
+        this.addSegment(event, 'END');
+        this.addSegment(event, 'END');
+        this.addSegment(event, 'END');
+        this.addSegment(event, 'END'); // Back to the starting point
+        this.getPath().isClosed = true;
+        this.state.isDrawing = true;
         break;
       default:
         return;
@@ -117,7 +136,7 @@ const store = {
   handleMouseMove(event) {
     // if (this.debug) console.log("handleMouseMove");
 
-    if (this.state.tool === 'PEN' && !this.state.isMovingPoint) {
+    if (this.state.tool === TOOLS.PEN && !this.state.isMovingPoint) {
       if (this.getPath().definition.length === 0) return;
       let point = this.state.svgPoint;
       point.x = event.clientX;
@@ -128,8 +147,12 @@ const store = {
       this.state.livePreviewSegment = {type: 'L', dest: {x: point.x, y: point.y}};
     }
 
-    if (this.state.tool === 'PEN' && this.state.isDrawing) {
+    if (this.state.tool === TOOLS.PEN && this.state.isDrawing) {
       this.drawBezier(event);
+    }
+
+    if (this.state.tool === TOOLS.RECT && this.state.isDrawing) {
+      this.drawRect(event);
     }
 
     if (this.state.isMovingPoint) {
@@ -199,6 +222,20 @@ const store = {
       this.updateCurve1({ x: oldCurve.x, y: oldCurve.y });
       this.updateCurve2({ x: point.x, y: point.y });
     }
+  },
+
+  drawRect(event) {
+    let { snapToGrid, selectedPathIndex } = this.state;
+    let point = this.state.svgPoint;
+    point.x = event.clientX;
+    point.y = event.clientY;
+    point = point.matrixTransform(this.state.transformMatrix);
+    if (snapToGrid) { point = roundPoint(point); }
+
+    let firstPoint = this.getSegment(selectedPathIndex, 0).dest;
+    this.updateDest({x: firstPoint.x, y: point.y}, selectedPathIndex, 1);
+    this.updateDest({x: point.x, y: point.y}, selectedPathIndex, 2);
+    this.updateDest({x: point.x, y: firstPoint.y}, selectedPathIndex, 3);
   },
 
   movePoint(event) {
@@ -340,9 +377,9 @@ const store = {
     if (this.debug) console.log("delete");
     const { tool } = this.state;
 
-    if (tool === "PEN" || tool === "EDIT") {
+    if (tool === TOOLS.PEN || tool === TOOLS.EDIT) {
       this.deleteSegment();
-    } else if (tool === "SELECT") {
+    } else if (tool === TOOLS.SELECT) {
       this.deletePath();
     }
     this.historySnapshot();
@@ -387,7 +424,7 @@ const store = {
     const { tool } = this.state;
     this.updateBBox();
 
-    if (tool === "EDIT" || tool === "SELECT") {
+    if (tool === TOOLS.EDIT || tool === TOOLS.SELECT) {
       if (this.state.selectedPathId !== id) {
         this.unselectPoint();
       }
@@ -454,9 +491,12 @@ const store = {
     this.state.allPaths[pathIndex].definition[pointIndex].curve2 = coordinates;
   },
 
-  updateDest() {
-    // TODO?
-    return;
+  updateDest(
+    coordinates,
+    pathIndex = this.state.selectedPathIndex, 
+    pointIndex = this.state.selectedPointIndex,
+  ) {
+    this.state.allPaths[pathIndex].definition[pointIndex].dest = coordinates;
   },
 
   addCircle(center, radius) {

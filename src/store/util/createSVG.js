@@ -1,6 +1,6 @@
-import store from './store';
+import store from './../store';
 
-const createSVG = function() {
+export function createSVG() {
     /* for now this provides just a very basic functionality */
     const div = document.createElement('div')
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -48,5 +48,3 @@ const createSVG = function() {
 
     return div.innerHTML;
 }
-
-export default createSVG;

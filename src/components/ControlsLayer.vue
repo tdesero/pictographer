@@ -87,7 +87,7 @@
           v-if="hasLivePreview"
           :d="livePreview" 
           stroke="#363bd2" 
-          :transform="transform(store.state.allPaths[store.state.selectedPathIndex])"
+          :transform="transform(store.getPath())"
           :class="{hide: store.state.hideControls}"
         ></path>
 

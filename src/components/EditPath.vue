@@ -37,7 +37,7 @@ export default {
     },
     isActive: function() {
       const { selectedPathId, tool } = this.store.state;
-      return (tool === 'EDIT' || tool === 'PEN') && selectedPathId === this.id;
+      return (tool === 'EDIT' || tool === 'PEN' || tool === 'RECT') && selectedPathId === this.id;
     },
     transform: function() {
       let t = '';

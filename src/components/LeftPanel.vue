@@ -31,6 +31,16 @@
       
       </button>
 
+       <button
+        @click="store.selectTool('RECT')"
+        class="btn btn-primary btn btn-primary btn-circle btn-xl"
+        :class="{active: store.state.tool === 'RECT'}"
+        title="Pen (P)"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" fill="none"><path d=" M 3 3 L 3 21 L 21 21 L 21 3 L 3 3 Z" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt" fill="none"></path></svg>
+      
+      </button>
+
       <div class="btn-hover-group position-relative mb-2">
         <button class="btn btn-primary btn-circle btn-xl trigger m-0">
         +

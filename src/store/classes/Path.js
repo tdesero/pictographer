@@ -1,22 +1,23 @@
 import { id } from '../util/id';
 import { Segment } from './Segment';
 import { calcScale } from './../util/calcScale';
+import { rotatePoint } from './../util/rotatePoint';
 
 export class Path {
-  constructor() {
-    this.id= id();
-    this.definition= [];
-    this.isClosed= false;
-    this.rotation= null;
-    this.scale= { x: 1, y: 1 };
-    this.bbox= {};
-    this.center= {};
-    this.rotationCenter= {};
-    this.translate= { x: null, y: null };
-    this.strokeLinecap= 'butt';
-    this.strokeLinejoin= 'miter';
-    this.strokeWidth= 2;
-    this.hasFill= false;
+  constructor(definition) {
+    this.id = id();
+    this.definition = definition || [];
+    this.isClosed = false;
+    this.rotation = null;
+    this.scale = { x: 1, y: 1 };
+    this.bbox = {};
+    this.center = {};
+    this.rotationCenter = {};
+    this.translate = { x: null, y: null };
+    this.strokeLinecap = 'butt';
+    this.strokeLinejoin = 'miter';
+    this.strokeWidth = 2;
+    this.hasFill = false;
   }
 
   newID() {
@@ -136,5 +137,17 @@ export class Path {
     seg.dest.y = k.y;
 
     return id;
+  }
+
+  bakeRotation() {
+    const { rotationCenter, rotation } = this;
+    this.definition.forEach(s => {
+      if (s.type === "C") {
+        s.curve1 = rotatePoint( s.curve1, rotationCenter.x,  rotationCenter.y, rotation);  
+        s.curve2 = rotatePoint( s.curve2, rotationCenter.x,  rotationCenter.y, rotation);
+      }
+      s.dest = rotatePoint( s.dest, rotationCenter.x,  rotationCenter.y, rotation);
+    })
+    this.rotation = 0;
   }
 }

@@ -6,7 +6,6 @@ import { initialState } from './initialState';
 
 // utilities & helpers
 import { roundPoint } from './util/roundPoint';
-import { rotatePoint } from './util/rotatePoint';
 import { createSVG } from './util/createSVG';
 import { exportSVG } from './util/exportSVG';
 import { polyfill } from './util/polyfill';
@@ -385,28 +384,28 @@ const store = {
     this.historySnapshot();
   },
 
-  deletePath() {
-    const {selectedPathIndex} = this.state;
+  deletePath(pathIndex) {
+    pathIndex = pathIndex || this.state.selectedPathIndex;
 
-    if (selectedPathIndex !== null) {
-      this.state.allPaths.splice(selectedPathIndex, 1);
+    if (pathIndex !== null) {
+      this.state.allPaths.splice(pathIndex, 1);
       this.unselectPath();
     }
   },
 
-  deleteSegment() {
+  deleteSegment(pathIndex, segmentIndex) {
     if (this.debug) console.log("deleteSegment");
+    segmentIndex = segmentIndex || this.state.selectedPointIndex;
+    pathIndex = pathIndex || this.state.selectedPathIndex;
 
-    let {selectedPointIndex, selectedPathIndex} = this.state;
-
-    if (selectedPointIndex !== null) {
-      if ( selectedPointIndex === 0 ) {
+    if (segmentIndex !== null) {
+      if ( segmentIndex === 0 ) {
 
         if (this.getPath().definition.length > 1) {
           /* make the recent first point moveto ('M') instead of lineto ('L') */
-          this.updateType('M', selectedPathIndex, 1);
-          this.updateCurve1({}, selectedPathIndex, 1);
-          this.updateCurve2({}, selectedPathIndex, 1);
+          this.updateType('M', pathIndex, 1);
+          this.updateCurve1({}, pathIndex, 1);
+          this.updateCurve2({}, pathIndex, 1);
         }
         
       }
@@ -417,6 +416,35 @@ const store = {
       this.state.selectedPointId = null;
     }
     this.updateBBox();
+  },
+
+  splitPath(pathIndex, segmentIndex, deleteSegment) {
+    pathIndex = pathIndex || this.state.selectedPathIndex;
+    segmentIndex = segmentIndex || this.state.selectedPointIndex;
+    deleteSegment = deleteSegment || true;
+
+    const lastIndex = this.getPath(pathIndex).definition.length - 1;
+    if (segmentIndex === lastIndex || segmentIndex === 0) {
+      this.deleteSegment(pathIndex, segmentIndex);
+      return;
+    }
+
+    const newPathDefinition = this.getPath(pathIndex).definition.splice(0, segmentIndex);
+    if (deleteSegment) {
+      this.getPath(pathIndex).definition.shift();
+    }
+
+    this.updateType('M', pathIndex, 0);
+    this.updateCurve1({}, pathIndex, 0);
+    this.updateCurve2({}, pathIndex, 0);
+
+    if (this.getPath(pathIndex).definition.length <= 1) {
+      this.deletePath(pathIndex);
+    }
+
+    if (newPathDefinition.length > 1) {
+      this.state.allPaths.push( new Path(newPathDefinition) );
+    }
   },
 
   selectPath(id, index) {
@@ -548,16 +576,7 @@ const store = {
   },
 
   bakeRotation() {
-    const {rotationCenter, rotation} = this.getPath();
-
-    this.getPath().definition.forEach(s => {
-      if (s.type === "C") {
-        s.curve1 = rotatePoint( s.curve1, rotationCenter.x,  rotationCenter.y, rotation);  
-        s.curve2 = rotatePoint( s.curve2, rotationCenter.x,  rotationCenter.y, rotation);
-      }
-      s.dest = rotatePoint( s.dest, rotationCenter.x,  rotationCenter.y, rotation);
-    })
-    this.getPath().rotation = 0;
+    this.getPath().bakeRotation();
     this.state.transformMatrix = window.SELECTED_PATH.getScreenCTM().inverse();
 
     this.updateBBox();

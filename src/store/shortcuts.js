@@ -31,10 +31,16 @@ const shortcuts = function() {
             store.state.tool = "PEN";
         }
 
+        if (event.key === '-') {
+          if (store.state.tool === "EDIT" || store.state.tool === "PEN") {
+              store.deleteSegment();
+          }
+        }
+
         /* delete shortcuts */
         if (event.key === 'Delete' || event.key === 'Backspace') {
             if (store.state.tool === "EDIT" || store.state.tool === "PEN") {
-                store.deleteSegment();
+                store.splitPath(undefined, undefined, false);
             }
             if (store.state.tool === "SELECT") {
                 store.deletePath();

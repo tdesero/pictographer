@@ -11,7 +11,7 @@ export default {
     scaleX: Number, // to scale controls to the full canvas
     scaleY: Number, // to scale controls to the full canvas
     definition: Array,
-    id: Number,
+    id: String,
     index: Number,
     path: Object
   },

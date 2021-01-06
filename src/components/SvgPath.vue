@@ -19,7 +19,7 @@ export default {
   name: "SvgPath",
   props: {
     definition: Array,
-    id: Number,
+    id: String,
     index: Number,
     path: Object
   },

@@ -7,10 +7,10 @@ import { initialState } from './initialState';
 // utilities & helpers
 import { roundPoint } from './util/roundPoint';
 import { rotatePoint } from './util/rotatePoint';
-import { calcScale } from './util/calcScale';
 import { createSVG } from './util/createSVG';
 import { exportSVG } from './util/exportSVG';
 import { polyfill } from './util/polyfill';
+import { clone } from './util/clone';
 
 polyfill();
 window.SELECTED_PATH = {}; // this is bad practice i guess but i need this globally every now and then...
@@ -336,7 +336,7 @@ const store = {
       this.state.selectedPointId = id;
       this.state.selectedPointIndex = 0;
     }
-    if ( where === "NEW" ) {
+    if ( where === 'NEW' ) {
       const id = this.getPath().addSegment({
         type: 'M',
         dest: {
@@ -518,13 +518,13 @@ const store = {
   },
 
   updateBBox() {
+    if (this.debug) console.log('updateBBox');
     const { selectedPathIndex } = this.state;
     if (window.SELECTED_PATH && selectedPathIndex) {
       const bbox = window.SELECTED_PATH.getBBox();
       this.getPath().bbox = bbox;
       this.updatePathCenter(bbox);
     }
-    if (this.debug) { console.log('updateBBox');}
   },
 
   updatePathCenter(bbox) {
@@ -564,23 +564,12 @@ const store = {
     this.historySnapshot();
   },
 
-  updateScale(scaleX, scaleY) {
-    const { center } = this.getPath();
-    const oldScale = this.getPath().scale;
-
-    this.getPath().definition.forEach(s => {
-      if (s.type === "C") {
-        s.curve1.x = calcScale(s.curve1.x, center.x, scaleX/oldScale.x);
-        s.curve1.y = calcScale(s.curve1.y, center.y, scaleY/oldScale.y);
-        s.curve2.x = calcScale(s.curve2.x, center.x, scaleX/oldScale.x);
-        s.curve2.y = calcScale(s.curve2.y, center.y, scaleY/oldScale.y);
-      }
-      s.dest.x = calcScale(s.dest.x, center.x, scaleX/oldScale.x);
-      s.dest.y = calcScale(s.dest.y, center.y, scaleY/oldScale.y);
-    })
-    this.getPath().scale.x = scaleX;
-    this.getPath().scale.y = scaleY;
-    this.state.transformMatrix = window.SELECTED_PATH.getScreenCTM().inverse();
+  updateScale(scaleX, scaleY, scalingCenter) {
+    scalingCenter = scalingCenter || this.getPath().center;
+    this.getPath().scalePath(scaleX, scaleY, scalingCenter);
+    
+    // don't know what the following line did but i'll save it for now...
+    // this.state.transformMatrix = window.SELECTED_PATH.getScreenCTM().inverse();
   },
 
   resetScale() {
@@ -641,8 +630,8 @@ const store = {
   },
 
   copyPath() {
-    const copiedPath = JSON.parse(JSON.stringify(this.getPath()));
-    copiedPath.id = new Date().getTime();
+    const copiedPath = clone(this.getPath());
+    copiedPath.newID();
 
     this.state.allPaths.push(copiedPath);
 
@@ -651,98 +640,10 @@ const store = {
   },
 
   splitSegment(distance) {
-    const selectedPointType = this.getSegment().type;
-
-    if (selectedPointType === 'C') {
-      this.splitCurve(distance);
-    } else if (selectedPointType === 'L') {
-      this.splitLine(distance);
-    }
-  },
-
-  splitLine(distance) {
-    if (this.debug) console.log('splitLine', distance);
-    let dist = distance || 0.5;
+    if (this.debug) console.log('splitSegment', distance);
     const {selectedPointIndex} = this.state;
-    const seg = this.getPath().definition[selectedPointIndex];
-    let newSeg;
+    const id = this.getPath().splitSegment(selectedPointIndex, distance);
 
-    //the original 2 points defining the bezier curve
-    const a = this.getPath().definition[selectedPointIndex-1].dest;
-    const b = seg.dest;
-
-    newSeg = {
-      type: 'L',
-      curve1: {},
-      curve2: {},
-      dest: {x: b.x,y: b.y}
-    }
-    const id = this.getPath().addSegmentAtPos(selectedPointIndex + 1, newSeg);
-
-    b.x = a.x + (b.x - a.x) * dist;
-    b.y = a.y + (b.y - a.y) * dist;
-
-    // set the selected Point to the new created (this is better while drawing)
-    this.state.selectedPointId = id;
-    this.state.selectedPointIndex = selectedPointIndex + 1;
-
-    this.state.currentPoint = this.getPath().definition[selectedPointIndex + 1].dest;
-  },
-
-  /** 
-   * splitCurve
-   * @param {number} dist
-   * dist is the distance between the two points in a range from 0.0 to 1.0
-  */
-  splitCurve(distance) {
-    if (this.debug) console.log('splitCurve', distance);
-    /* see: https://stackoverflow.com/questions/18655135/divide-bezier-curve-into-two-equal-halves/18681336#18681336 */
-
-    let dist = distance || 0.5;
-    const {selectedPointIndex} = this.state;
-    const seg = this.getPath().definition[selectedPointIndex];
-    let newSeg;
-
-    //the original 4 points defining the bezier curve
-    const a = this.getPath().definition[selectedPointIndex-1].dest;
-    const b = seg.curve1;
-    const c = seg.curve2;
-    const d = seg.dest;
-
-    //the new points
-    let e, f, g, h, j, k;
-
-    function calc(p1, p2) {
-      const p3 = {};
-      p3.x = (p1.x + p2.x) * dist;
-      p3.y = (p1.y + p2.y) * dist;
-      return p3;
-    }
-
-    e = calc(a, b);
-    f = calc(b, c);
-    g = calc(c, d);
-    h = calc(e, f);
-    j = calc(f, g);
-    k = calc(h, j);
-
-    newSeg = {
-      type: 'C',
-      curve1: {x: j.x, y: j.y},
-      curve2: {x: g.x, y: g.y},
-      dest: {x: d.x,y: d.y}
-    }
-    const id = this.getPath().addSegmentAtPos(selectedPointIndex + 1, newSeg);
-
-    // mutating the original segment object should be done after
-    seg.curve1.x = e.x;
-    seg.curve1.y = e.y;
-    seg.curve2.x = h.x;
-    seg.curve2.y = h.y;
-    seg.dest.x = k.x;
-    seg.dest.y = k.y;
-
-    // set the selected Point to the new created (this is better while drawing)
     this.state.selectedPointId = id;
     this.state.selectedPointIndex = selectedPointIndex + 1;
 

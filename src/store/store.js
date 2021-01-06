@@ -10,6 +10,7 @@ import { createSVG } from './util/createSVG';
 import { exportSVG } from './util/exportSVG';
 import { polyfill } from './util/polyfill';
 import { clone } from './util/clone';
+import { cloneDeep } from 'lodash';
 
 polyfill();
 window.SELECTED_PATH = {}; // this is bad practice i guess but i need this globally every now and then...
@@ -21,6 +22,8 @@ const TOOLS = {
   SELECT: 'SELECT',
   RECT: 'RECT',
 }
+
+const HISTORY_MAX = 30;
 
 // store
 const store = {
@@ -606,8 +609,12 @@ const store = {
       this.state.historyPos = -1;
     }
 
-    const copiedPaths = JSON.parse(JSON.stringify(this.state.allPaths));
-    this.state.history.unshift( copiedPaths );
+    if (this.state.history.length > (HISTORY_MAX - 1)) {
+      this.state.history.splice(-1, 1);
+    }
+
+    const copiedPaths = cloneDeep(this.state.allPaths);
+    this.state.history.unshift(copiedPaths);
   },
 
   setHistoryPos(val) {
@@ -618,7 +625,9 @@ const store = {
 
   historyGoTo( count = 0 ) {
     if (this.debug) console.log("historyGoTo", count);
-    Vue.set(this.state, 'allPaths', JSON.parse(JSON.stringify(this.state.history[count + 1])) );
+    if (count >= (HISTORY_MAX - 1)) return;
+    if (count >= (this.state.history.length -1)) return;
+    Vue.set(this.state, 'allPaths', cloneDeep(this.state.history[count + 1]) );
 
     /* after time traveling selected elements have to be reset, because it is possible that they don't exist. */
     this.selectTool(this.state.tool);

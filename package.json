@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@vue/cli-plugin-babel": "4.1.1",
+    "lodash": "^4.17.20",
     "vue": "^2.6.12"
   },
   "devDependencies": {

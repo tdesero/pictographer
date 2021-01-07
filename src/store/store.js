@@ -284,7 +284,7 @@ const store = {
   },
 
   movePath(event) {
-    const { movePathStartPos } = this.state;
+    const { multiSelectedPaths } = this.state;
     let diff = {};
     let point = this.state.svgPoint;
     point.x = event.clientX;
@@ -295,20 +295,35 @@ const store = {
     diff.x = point.x - this.state.clientStartPos.x;
     diff.y = point.y - this.state.clientStartPos.y;
 
-    this.getPath().definition.forEach((s, index) => {
-      if (s.type === 'Z') return;
-      s.dest.x = movePathStartPos[index].dest.x + diff.x;
-      s.dest.y = movePathStartPos[index].dest.y + diff.y;
-
-      if (s.curve1.x !== undefined) {
-        s.curve1.x = movePathStartPos[index].curve1.x + diff.x;
-        s.curve1.y = movePathStartPos[index].curve1.y + diff.y;
+    if (multiSelectedPaths.length > 0) {
+      for (let i = 0; i < multiSelectedPaths.length; i++) {
+        const pathIndex = multiSelectedPaths[i];
+        move(this.getPath(pathIndex));
       }
-      if (s.curve2.x !== undefined) {
-        s.curve2.x = movePathStartPos[index].curve2.x + diff.x;
-        s.curve2.y = movePathStartPos[index].curve2.y + diff.y;
-      }
-    })
+    } else {
+      move(this.getPath());
+    }
+    //move(this.getPath());
+    function move(path) {
+      console.log(diff.x)
+      if (!path) return;
+      path.definition.forEach((s) => {
+        if (s.type === 'Z') return;
+        s.dest.x += diff.x;
+        s.dest.y += diff.y;
+  
+        if (s.curve1.x !== undefined) {
+          s.curve1.x += diff.x;
+          s.curve1.y += diff.y;
+        }
+        if (s.curve2.x !== undefined) {
+          s.curve2.x += diff.x;
+          s.curve2.y += diff.y;
+        }
+      })
+    }
+    this.state.clientStartPos.x = point.x;
+    this.state.clientStartPos.y = point.y;
   },
 
   /* TODO where = 'END' || 'START' || 'NEW' */
@@ -461,10 +476,10 @@ const store = {
     }
   },
 
-  selectPath(id, index) {
+  selectPath(id, index, event) {
     if (this.debug) console.log("selectPath", id, index);
     const { tool } = this.state;
-    this.updateBBox();
+    event = event || {}; // if no event was provided i use
 
     if (tool === TOOLS.EDIT || tool === TOOLS.SELECT) {
       if (this.state.selectedPathId !== id) {
@@ -472,6 +487,26 @@ const store = {
       }
       this.state.selectedPathId = id;
       this.state.selectedPathIndex = index;
+
+      if (!event.shiftKey) {
+        this.state.multiSelectedPaths = [];
+        this.addToMultiSelect(index);
+        console.log('addToMultiSelect', this.state.multiSelectedPaths)
+      }
+    }
+
+    // multiselect
+    if (event.shiftKey && this.state.selectedPathIndex) { 
+      this.addToMultiSelect(index);
+    }
+
+    this.updateBBox();
+  },
+
+  addToMultiSelect(pathIndex) {
+    if (this.state.multiSelectedPaths.indexOf(pathIndex) === -1) {
+      this.state.multiSelectedPaths.push(pathIndex);
+      console.log('multi', this.state.multiSelectedPaths)
     }
   },
 
@@ -479,6 +514,7 @@ const store = {
     if (this.debug) console.log("unselectPath");
     this.state.selectedPathId = null
     this.state.selectedPathIndex = null;
+    this.state.multiSelectedPaths = [];
   },
 
   unselectPoint() {

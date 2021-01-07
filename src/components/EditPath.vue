@@ -49,8 +49,8 @@ export default {
     }
   },
   methods: {
-    handleClick: function() {
-      this.store.selectPath(this.id, this.index);
+    handleClick: function(event) {
+      this.store.selectPath(this.id, this.index, event);
     },
     handleMouseDown: function(id) {
       const selectedPathId = this.store.state.selectedPathId;

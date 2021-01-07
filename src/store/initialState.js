@@ -4,6 +4,7 @@ export const initialState = {
   allPaths: [],
   selectedPathIndex: null,
   selectedPathId: null,
+  multiSelectedPaths: [],
   tool: 'PEN',
   transformMatrix: null,
   currentPoint: {},
@@ -23,7 +24,7 @@ export const initialState = {
   snapToGrid: true,
   hideControls: false,
   viewBox: { x: 24, y: 24 },
-  //clientMovePos: {},
+  // clientMovePos: {},
   svgCode: '',
   zoom: 20,
 };

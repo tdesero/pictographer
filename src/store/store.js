@@ -235,9 +235,20 @@ const store = {
     if (snapToGrid) { point = roundPoint(point); }
 
     let firstPoint = this.getSegment(selectedPathIndex, 0).dest;
-    this.updateDest({x: firstPoint.x, y: point.y}, selectedPathIndex, 1);
-    this.updateDest({x: point.x, y: point.y}, selectedPathIndex, 2);
-    this.updateDest({x: point.x, y: firstPoint.y}, selectedPathIndex, 3);
+    // add Shift functionality 
+    if (event.shiftKey) {
+      console.log('shift');
+      // make it dependant on x
+      const dist = point.x - firstPoint.x;
+      const correctedY = firstPoint.y + dist;
+      this.updateDest({x: firstPoint.x, y: correctedY}, selectedPathIndex, 1);
+      this.updateDest({x: point.x, y: correctedY}, selectedPathIndex, 2);
+      this.updateDest({x: point.x, y: firstPoint.y}, selectedPathIndex, 3);
+    } else {
+      this.updateDest({x: firstPoint.x, y: point.y}, selectedPathIndex, 1);
+      this.updateDest({x: point.x, y: point.y}, selectedPathIndex, 2);
+      this.updateDest({x: point.x, y: firstPoint.y}, selectedPathIndex, 3);
+    }
   },
 
   movePoint(event) {

@@ -11,7 +11,22 @@
       stroke="black" 
       :viewBox="'0 0 ' + store.state.viewBox.x + ' ' + store.state.viewBox.y"
     >
+      <!-- fallback ref -->
+      <g class="fallback-ref"></g>
+
       <SvgPath v-for="(path, index) in store.state.allPaths" :definition="path.definition" :path="path" :key="path.id" :id="path.id" :index="index" :ref="path.id"></SvgPath>
+
+      <rect 
+        v-if="(store.state.tool === 'SELECT') 
+              && (store.state.selectionRect !==  {})
+              && store.state.isSelecting
+              && !store.state.isMovingPath" 
+        :x="store.state.selectionRect.x" 
+        :y="store.state.selectionRect.y"
+        :width="store.state.selectionRect.width"
+        :height="store.state.selectionRect.height"
+        class="selection-rect"
+      />
     </svg>
 
     <ControlsLayer
@@ -66,15 +81,13 @@ export default {
       if (pathId) {
         this.store.handleMouseDown(event, this.$refs[pathId][0].$el);
       } else {
-        this.store.handleMouseDown(event, null);
+        // fallback domElement -> this is a bit hacky
+        const domElement = document.querySelector('#app svg g');
+        this.store.handleMouseDown(event, domElement);
       }
     },
     handleMouseMove: function(event) {
-      let pathId = this.store.state.selectedPathId;
-
-      if (pathId) {
-        this.store.handleMouseMove(event, this.$refs[pathId][0].$el);
-      }
+      this.store.handleMouseMove(event);
     },
     transform: function(path) {
       let t = '';
@@ -86,8 +99,8 @@ export default {
     startPointMove: function(id, step) {
       this.store.setSelectedPoint(id, step)
     },
-    endPointMove: function() {
-      this.store.handleMouseUp()
+    endPointMove: function(event) {
+      this.store.handleMouseUp(event)
     }
   }
 };
@@ -132,5 +145,11 @@ g.active {
     url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="currentColor"><path d="M 19 2 L 13 8 L 10 6 L 4 13 L 2 22 L 12 20 L 18 14 L 16 11 L 22 5 L 19 2 Z M 2 22 L 9 15 M 16 5 L 19 8 " stroke-width="2"></path></svg>') 1x,
     url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="white" stroke="currentColor"><path d="M 19 2 L 13 8 L 10 6 L 4 13 L 2 22 L 12 20 L 18 14 L 16 11 L 22 5 L 19 2 Z M 2 22 L 9 15 M 16 5 L 19 8 " stroke-width="2"></path></svg>') 2x
   ) 0 200, auto;
+}
+
+.selection-rect {
+  opacity: 0.2;
+  fill: blue;
+  stroke-width: 0;
 }
 </style>

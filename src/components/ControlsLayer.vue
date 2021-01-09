@@ -31,7 +31,7 @@
             ></path>
             <circle
                 v-if="segment.type === 'C'"
-                @mousedown="pointHandleMouseDown(segment.id, segmentIndex, 'curve1', path.id, index)"
+                @mousedown="(event) => pointHandleMouseDown(event,segment.id, segmentIndex, 'curve1', path.id, index)"
                 :cx="segment.curve1.x * scaleX" 
                 :cy="segment.curve1.y  * scaleY" 
                 r="4" 
@@ -45,7 +45,7 @@
             ></path>
             <circle
                 v-if="segment.type === 'C'"
-                @mousedown="pointHandleMouseDown(segment.id, segmentIndex, 'curve2', path.id, index)"
+                @mousedown="(event) => pointHandleMouseDown(event, segment.id, segmentIndex, 'curve2', path.id, index)"
                 :cx="segment.curve2.x * scaleX" 
                 :cy="segment.curve2.y * scaleY" 
                 r="4" 
@@ -55,7 +55,7 @@
             <!-- dest points (square points, destinationselec) -->
             <rect
                 v-if="segment.type !== 'Z'"
-                @mousedown="pointHandleMouseDown(segment.id, segmentIndex, 'dest', path.id, index)"
+                @mousedown="(event) => pointHandleMouseDown(event, segment.id, segmentIndex, 'dest', path.id, index)"
                 @mouseup="drawLine"
                 :x="segment.dest.x * scaleX - 5" 
                 :y="segment.dest.y * scaleY - 5" 
@@ -201,8 +201,8 @@ export default {
     }
     return t;
     },
-    selectPath: function (id, index) {
-      this.store.selectPath(id, index);
+    selectPath: function (id, index, event) {
+      this.store.selectPath(id, index, event);
     },
     startPointMove: function(id, step) {
       this.store.setSelectedPoint(id, step)
@@ -215,15 +215,17 @@ export default {
       }
     },
     handleClick() {
-      let {tool} = this.store.state;
+      let { tool} = this.store.state;
       const {shouldUnselect} = this.private;
-      if ( tool !== 'PEN' && shouldUnselect) {
+      // const hasMultiSelected = multiSelectedPaths.length > 1 ? true : false;
+      console.log('isSelecting', this.store.state.isSelecting);
+      if ( (tool !== 'PEN') && shouldUnselect) {
           this.store.unselectPath();
           this.private.shouldUnselect = false;
       }
     },
     handleMouseDown(event) {
-      let {tool} = this.store.state;
+      const { tool } = this.store.state;
       if ( tool !== 'PEN' && event.target.matches('.controls-layer')) {
           this.private.shouldUnselect = true;
       }
@@ -232,7 +234,7 @@ export default {
     handleMouseMove(event) {
       this.$emit('handleMouseMove', event)
     },
-    pointHandleMouseDown(segmentId, segmentIndex, pointType, pathId, pathIndex) {
+    pointHandleMouseDown(event, segmentId, segmentIndex, pointType, pathId, pathIndex) {
       if (this.store.debug) console.log('pointHandleMouseDown', 'ControlsLayer');
       const { tool, allPaths, selectedPointIndex, selectedPathId, isFirstPoint } = this.store.state;
       let shouldJoin = false;
@@ -255,7 +257,7 @@ export default {
       if (shouldJoin) { this.store.joinPoints(pathIndex); }
 
       if ( tool !== 'PEN') {
-        this.selectPath(pathId, pathIndex);
+        this.selectPath(pathId, pathIndex, event);
         this.startPointMove(segmentId, pointType); //sets selected point
       }
 

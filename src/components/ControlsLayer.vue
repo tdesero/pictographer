@@ -215,15 +215,17 @@ export default {
       }
     },
     handleClick() {
-      let {tool} = this.store.state;
+      let { tool} = this.store.state;
       const {shouldUnselect} = this.private;
-      if ( tool !== 'PEN' && shouldUnselect) {
+      // const hasMultiSelected = multiSelectedPaths.length > 1 ? true : false;
+      console.log('isSelecting', this.store.state.isSelecting);
+      if ( (tool !== 'PEN') && shouldUnselect) {
           this.store.unselectPath();
           this.private.shouldUnselect = false;
       }
     },
     handleMouseDown(event) {
-      let {tool} = this.store.state;
+      const { tool } = this.store.state;
       if ( tool !== 'PEN' && event.target.matches('.controls-layer')) {
           this.private.shouldUnselect = true;
       }

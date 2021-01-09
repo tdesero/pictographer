@@ -13,7 +13,9 @@ import { clone } from './util/clone';
 import { cloneDeep } from 'lodash';
 
 polyfill();
-window.SELECTED_PATH = {}; // this is bad practice i guess but i need this globally every now and then...
+
+// this is bad practice i guess but i need this globally every now and then:
+window.SELECTED_PATH = undefined;
 
 // define all Tools as Constants
 const TOOLS = {
@@ -93,6 +95,8 @@ const store = {
     if (selectedPathIndex !== null) {
       this.state.movePathStartPos = JSON.parse(JSON.stringify(this.getPath().definition));
       pathLength = this.getPath().definition.length;
+
+      this.updateBBox();
     }
 
     switch(this.state.tool) {   
@@ -125,9 +129,13 @@ const store = {
         this.addSegment(event, 'END');
         this.addSegment(event, 'END');
         this.addSegment(event, 'END');
-        this.addSegment(event, 'END'); // Back to the starting point
+        // Back to the starting point
+        this.addSegment(event, 'END');
         this.getPath().isClosed = true;
         this.state.isDrawing = true;
+        break;
+      case TOOLS.SELECT:
+        this.state.isSelecting = true;
         break;
       default:
         return;
@@ -139,6 +147,7 @@ const store = {
     // if (this.debug) console.log("handleMouseMove");
 
     if (this.state.tool === TOOLS.PEN && !this.state.isMovingPoint) {
+      if (!this.getPath()) return;
       if (this.getPath().definition.length === 0) return;
       let point = this.state.svgPoint;
       point.x = event.clientX;
@@ -161,8 +170,14 @@ const store = {
       this.movePoint(event);
     }
 
-    if (this.state.tool === 'SELECT' && this.state.isMovingPath) {
+    if (this.state.tool === TOOLS.SELECT && this.state.isMovingPath) {
       this.movePath(event);
+    }
+
+    if (this.state.tool === TOOLS.SELECT && this.state.isSelecting && !this.state.isMovingPath) {
+      this.drawSelectionRect(event);
+    } else {
+      this.state.isSelecting = false;
     }
   },
 
@@ -177,6 +192,13 @@ const store = {
     this.state.isMovingPoint = false;
     this.state.isMovingPath = false;
     this.state.isDrawing = false;
+    this.state.selectionRect = {};
+    console.log('selectionRect is empty')
+
+    // this should be set a bit later so the click event still knows that there was a selection
+    setTimeout(() => {
+      this.state.isSelecting = false;
+    }, 100);
 
     if (selectedPathIndex !== null) {
       this.updateBBox();
@@ -251,6 +273,54 @@ const store = {
     }
   },
 
+  drawSelectionRect(event) {
+    const { selectionRect, allPaths } = this.state;
+    let point = this.state.svgPoint;
+    point.x = event.clientX;
+    point.y = event.clientY;
+    point = point.matrixTransform(this.state.transformMatrix);
+
+    const startPoint = this.state.clientStartPos;
+    let width = point.x - startPoint.x;
+    let height = point.y - startPoint.y;
+    let x = startPoint.x; 
+    let y = startPoint.y;
+    if (width < 0) {
+      width = Math.abs(width);
+      x = point.x;
+    }
+    if (height < 0) {
+      height = Math.abs(height);
+      y = point.y;
+    }
+
+    this.state.selectionRect = {
+      x,
+      y,
+      width,
+      height,
+    };
+
+    allPaths.forEach( (path, index) => {
+      const RectA = {
+        Left: selectionRect.x,
+        Right: selectionRect.x + selectionRect.width,
+        Top: selectionRect.y,
+        Bottom: selectionRect.y + selectionRect.height,
+      }
+      const RectB = {
+        Left: path.bbox.x,
+        Right: path.bbox.x + path.bbox.width,
+        Top: path.bbox.y,
+        Bottom: path.bbox.y + path.bbox.height,
+      }
+      if (RectA.Left < RectB.Right && RectA.Right > RectB.Left &&
+        RectA.Bottom > RectB.Top && RectA.Top < RectB.Bottom ) {
+          this.addToMultiSelect(index);
+      }
+    })
+  },
+
   movePoint(event) {
     const {selectedPathIndex, selectedPointIndex, selectedPointStep, movePathStartPos} = this.state;
       let point = this.state.svgPoint;
@@ -284,7 +354,9 @@ const store = {
   },
 
   movePath(event) {
+    // method supports multiple paths to be moved
     const { multiSelectedPaths } = this.state;
+    this.state.isMovingPath = true;
     let diff = {};
     let point = this.state.svgPoint;
     point.x = event.clientX;
@@ -295,38 +367,39 @@ const store = {
     diff.x = point.x - this.state.clientStartPos.x;
     diff.y = point.y - this.state.clientStartPos.y;
 
-    if (multiSelectedPaths.length > 0) {
+    if (multiSelectedPaths.length > 1) {
       for (let i = 0; i < multiSelectedPaths.length; i++) {
         const pathIndex = multiSelectedPaths[i];
-        move(this.getPath(pathIndex));
+        this.movePathByPx(this.getPath(pathIndex), diff.x, diff.y);
       }
     } else {
-      move(this.getPath());
-    }
-    //move(this.getPath());
-    function move(path) {
-      console.log(diff.x)
-      if (!path) return;
-      path.definition.forEach((s) => {
-        if (s.type === 'Z') return;
-        s.dest.x += diff.x;
-        s.dest.y += diff.y;
-  
-        if (s.curve1.x !== undefined) {
-          s.curve1.x += diff.x;
-          s.curve1.y += diff.y;
-        }
-        if (s.curve2.x !== undefined) {
-          s.curve2.x += diff.x;
-          s.curve2.y += diff.y;
-        }
-      })
+      const path = this.getPath();
+      this.movePathByPx(path, diff.x, diff.y);
     }
     this.state.clientStartPos.x = point.x;
     this.state.clientStartPos.y = point.y;
   },
 
-  /* TODO where = 'END' || 'START' || 'NEW' */
+  movePathByPx(path, x, y) {
+    // px unit is relative to viewBox
+    if (!path) return;
+    path.definition.forEach((s) => {
+      if (s.type === 'Z') return;
+      s.dest.x += x;
+      s.dest.y += y;
+
+      if (s.curve1.x !== undefined) {
+        s.curve1.x += x;
+        s.curve1.y += y;
+      }
+      if (s.curve2.x !== undefined) {
+        s.curve2.x += x;
+        s.curve2.y += y;
+      }
+    })
+  },
+
+  /* where = 'END' || 'START' || 'NEW' */
   addSegment(event, where) {
     if (this.debug) console.log("addSegment", where);
 
@@ -477,7 +550,7 @@ const store = {
   },
 
   selectPath(id, index, event) {
-    if (this.debug) console.log("selectPath", id, index);
+    if (this.debug) console.log("selectPath", id, index, event);
     const { tool } = this.state;
     event = event || {}; // if no event was provided i use
 
@@ -488,15 +561,17 @@ const store = {
       this.state.selectedPathId = id;
       this.state.selectedPathIndex = index;
 
-      if (!event.shiftKey) {
-        this.state.multiSelectedPaths = [];
-        this.addToMultiSelect(index);
-        console.log('addToMultiSelect', this.state.multiSelectedPaths)
+      const isInMultiSelection = this.state.multiSelectedPaths.indexOf(index) >= 0;
+      const hasMultiSelection = this.state.multiSelectedPaths.length > 1;
+
+      if (!event.shiftKey && !isInMultiSelection && hasMultiSelection) {
+          this.state.multiSelectedPaths = [];
+          this.addToMultiSelect(index);
       }
     }
 
     // multiselect
-    if (event.shiftKey && this.state.selectedPathIndex) { 
+    if (event.shiftKey) { 
       this.addToMultiSelect(index);
     }
 
@@ -598,7 +673,7 @@ const store = {
   updateBBox() {
     if (this.debug) console.log('updateBBox');
     const { selectedPathIndex } = this.state;
-    if (window.SELECTED_PATH && selectedPathIndex) {
+    if (window.SELECTED_PATH && (selectedPathIndex !== undefined) ) {
       const bbox = window.SELECTED_PATH.getBBox();
       this.getPath().bbox = bbox;
       this.updatePathCenter(bbox);
@@ -707,11 +782,19 @@ const store = {
   copyPath() {
     const copiedPath = clone(this.getPath());
     copiedPath.newID();
+    return copiedPath;
+  },
 
+  pastePath(copiedPath) {
     this.state.allPaths.push(copiedPath);
 
     this.selectPath(copiedPath.id, this.state.allPaths.length - 1);
     this.unselectPoint();
+  },
+
+  copyPastePath() {
+    const copiedPath = this.copyPath();
+    this.pastePath(copiedPath);
   },
 
   splitSegment(distance) {

@@ -1,5 +1,7 @@
 import store from './store';
 
+let copiedPath;
+
 const shortcuts = function() {
     document.addEventListener('keydown', function(event) {
 
@@ -45,6 +47,40 @@ const shortcuts = function() {
             if (store.state.tool === "SELECT") {
                 store.deletePath();
             }
+        }
+
+        /* copy path */ 
+        if (event.ctrlKey && event.key === 'c') {
+          copiedPath = store.copyPath();
+        }
+        if (event.ctrlKey && event.key === 'v' && copiedPath) {
+          store.pastePath(copiedPath);
+        }
+
+        /* move path with arrow keys */ 
+        if (store.state.tool === 'SELECT') {
+          switch (event.key) {
+            case "ArrowLeft":
+                store.movePathByPx(store.getPath(), -1, 0);
+                store.updateBBox();
+                store.historySnapshot();
+                break;
+            case "ArrowRight":
+              store.movePathByPx(store.getPath(), 1, 0);
+              store.updateBBox();
+              store.historySnapshot();
+                break;
+            case "ArrowUp":
+                store.movePathByPx(store.getPath(), 0, -1);
+                store.updateBBox();
+                store.historySnapshot();
+                break;
+            case "ArrowDown":
+                store.movePathByPx(store.getPath(), 0, 1);
+                store.updateBBox();
+                store.historySnapshot();
+                break;
+          }
         }
 
     })

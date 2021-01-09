@@ -19,6 +19,8 @@ export const initialState = {
   svgPoint: {},
   isFirstPoint: true,
   isDrawing: false,
+  isSelecting: false,
+  selectionRect: {},
   nextCurve: {},
   currentSegment: 'L',
   snapToGrid: true,

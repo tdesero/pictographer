@@ -20,7 +20,7 @@ export default {
     return { store };
   },
   created: function() {
-    this.store.createPath();
+    //this.store.createPath();
   },
   components: {
     LeftPanel,

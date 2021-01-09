@@ -25,7 +25,8 @@ export default {
   },
   data: function() {
     return {
-      store
+      store,
+      parentReference: {}
       };
   },
   computed: {
@@ -48,7 +49,7 @@ export default {
         t += `rotate(${this.path.rotation} ${this.path.rotationCenter.x} ${this.path.rotationCenter.y}) `;
       }
       return t;
-    }
+    },
   },
   updated: function() {
     const { selectedPathId } = this.store.state;
@@ -63,6 +64,7 @@ export default {
     if (this.id === selectedPathId) {
       window.SELECTED_PATH = this.$refs.path;
     }
+    this.parentReference = this.$refs.path.parentElement;
   }
 };
 </script>

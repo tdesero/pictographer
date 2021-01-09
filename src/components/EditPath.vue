@@ -1,5 +1,5 @@
 <template>
-  <path class="edit-path" :class="{active: isActive, 'select-tool': store.state.tool === 'SELECT' }" :d="dToString" :fill="path.hasFill ? 'currentColor' : 'none'" @click="handleClick" @mousedown="handleMouseDown(id)" :transform="transform" ref="path"></path>
+  <path class="edit-path" :class="{active: isActive, 'select-tool': store.state.tool === 'SELECT' }" :d="dToString" :fill="path.hasFill ? 'currentColor' : 'none'" @mousedown="(event) => handleMouseDown(id, index, event)" :transform="transform" ref="path"></path>
 </template>
 
 <script>
@@ -49,11 +49,12 @@ export default {
     }
   },
   methods: {
-    handleClick: function(event) {
-      this.store.selectPath(this.id, this.index, event);
-    },
-    handleMouseDown: function(id) {
-      const selectedPathId = this.store.state.selectedPathId;
+    handleMouseDown: function(id, index, event) {
+      let selectedPathId = this.store.state.selectedPathId;
+      if (this.id !== selectedPathId) {
+        this.store.selectPath(this.id, index, event);
+        selectedPathId = this.store.state.selectedPathId; // has to be updatet the id is only a value not reference
+      } 
       if (this.store.state.tool === 'SELECT' && selectedPathId === id ) {
         this.store.state.isMovingPath = true;
       }

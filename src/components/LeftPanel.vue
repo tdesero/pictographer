@@ -93,7 +93,7 @@
 
       
       <button
-        @click="store.copyPath()"
+        @click="store.copyPastePath()"
         title="Copy"
         class="btn btn-secondary btn btn-primary btn-circle btn-xl"
       >

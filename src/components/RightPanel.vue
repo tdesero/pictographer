@@ -241,11 +241,8 @@ export default {
       this.store.historySnapshot();
     },
     updateCenter: function() {
-      if(window.SELECTED_PATH) {
-          const bbox = window.SELECTED_PATH.getBBox();
-          this.store.updatePathCenter(bbox)
-          this.store.updateRotationCenter();
-      }
+      // this is probably not needed anymore...
+      this.store.updateRotationCenter();
     },
     bakeRotation: function() {
       this.store.bakeRotation();

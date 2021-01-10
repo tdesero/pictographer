@@ -24,6 +24,11 @@ export class Path {
     this.id = id();
   }
 
+  getDOMRef() {
+    const id = this.id;
+    return document.querySelector('#' + id);
+  }
+
   addSegment(segmentOptions) {
     const segment = new Segment(segmentOptions)
     this.definition.push(segment);
@@ -149,5 +154,20 @@ export class Path {
       s.dest = rotatePoint( s.dest, rotationCenter.x,  rotationCenter.y, rotation);
     })
     this.rotation = 0;
+  }
+
+  updateBBox() {
+    const bbox = this.getDOMRef().getBBox();
+    this.bbox = bbox;
+    this.updateCenter();
+  }
+
+  updateCenter() {
+    const bbox = this.bbox;
+    let center = {
+      x: bbox.x + bbox.width/2,
+      y: bbox.y + bbox.height/2
+    }
+    this.center = center;
   }
 }

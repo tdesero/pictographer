@@ -14,9 +14,6 @@ import { cloneDeep } from 'lodash';
 
 polyfill();
 
-// this is bad practice i guess but i need this globally every now and then:
-window.SELECTED_PATH = undefined;
-
 // define all Tools as Constants
 const TOOLS = {
   PEN: 'PEN',
@@ -182,7 +179,7 @@ const store = {
   },
 
   handleMouseUp() {
-    let {selectedPathIndex, selectedPointIndex} = this.state;
+    let {selectedPathIndex, selectedPointIndex, multiSelectedPaths} = this.state;
 
     /* if a point or path was moved add it to history */
     if (this.state.isMovingPoint || this.state.isMovingPath || this.state.isDrawing) {
@@ -202,7 +199,11 @@ const store = {
 
     if (selectedPathIndex !== null) {
       this.updateBBox();
-      this.updatePathCenter(this.getPath().bbox);
+    }
+
+    for (let i = 0; i < multiSelectedPaths.length; i++ ) {
+      const pathIndex = multiSelectedPaths[i];
+      this.getPath(pathIndex).updateBBox();
     }
 
     if (selectedPathIndex !== null && selectedPointIndex !== null) {
@@ -453,8 +454,8 @@ const store = {
     this.state.isFirstPoint = false;
     
     /* update bbox according to the new point */
-    if (window.SELECTED_PATH) {
-      let bbox = window.SELECTED_PATH.getBBox();
+    if (this.getPath().getDOMRef()) {
+      let bbox = this.getPath().getDOMRef().getBBox();
       this.updateBBox()
       this.updatePathCenter(bbox);
       this.updateRotationCenter();
@@ -670,16 +671,16 @@ const store = {
     this.historySnapshot();
   },
 
-  updateBBox() {
+  updateBBox(pathIndex) {
     if (this.debug) console.log('updateBBox');
-    const { selectedPathIndex } = this.state;
-    if (window.SELECTED_PATH && (selectedPathIndex !== undefined) ) {
-      const bbox = window.SELECTED_PATH.getBBox();
-      this.getPath().bbox = bbox;
-      this.updatePathCenter(bbox);
+    pathIndex = pathIndex || this.state.selectedPathIndex;
+    const path = this.getPath(pathIndex)
+    if (path && (pathIndex !== undefined) ) {
+      path.updateBBox();
     }
   },
 
+  // TODO: get rid of this -> checkout where it is called
   updatePathCenter(bbox) {
     let center = {
       x: bbox.x + bbox.width/2,
@@ -691,7 +692,7 @@ const store = {
   updateRotation(val) {
     this.getPath().rotation = val;
     this.updateRotationCenter();
-    this.state.transformMatrix = window.SELECTED_PATH.getScreenCTM().inverse();
+    this.state.transformMatrix = this.getPath().getDOMRef().getScreenCTM().inverse();
   },
 
   updateRotationCenter() {
@@ -702,7 +703,7 @@ const store = {
 
   bakeRotation() {
     this.getPath().bakeRotation();
-    this.state.transformMatrix = window.SELECTED_PATH.getScreenCTM().inverse();
+    this.state.transformMatrix = this.getPath().getDOMRef().getScreenCTM().inverse();
 
     this.updateBBox();
     this.historySnapshot();
@@ -713,7 +714,7 @@ const store = {
     this.getPath().scalePath(scaleX, scaleY, scalingCenter);
     
     // don't know what the following line did but i'll save it for now...
-    // this.state.transformMatrix = window.SELECTED_PATH.getScreenCTM().inverse();
+    // this.state.transformMatrix = this.getPath().getDOMRef().getScreenCTM().inverse();
   },
 
   resetScale() {

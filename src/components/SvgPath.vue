@@ -8,6 +8,7 @@
       :stroke-linejoin="path.strokeLinejoin"
       :stroke-width="path.strokeWidth"
       :fill="path.hasFill ? 'currentColor' : 'none'"
+      :id="id"
       ref="path"
       ></path>
 </template>
@@ -51,19 +52,7 @@ export default {
       return t;
     },
   },
-  updated: function() {
-    const { selectedPathId } = this.store.state;
-
-    if (this.id === selectedPathId && !(window.SELECTED_PATH === this.$refs.path)) {
-      window.SELECTED_PATH = this.$refs.path;
-    }
-  },
   mounted: function() {
-    const { selectedPathId } = this.store.state;
-
-    if (this.id === selectedPathId) {
-      window.SELECTED_PATH = this.$refs.path;
-    }
     this.parentReference = this.$refs.path.parentElement;
   }
 };

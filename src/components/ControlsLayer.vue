@@ -70,7 +70,7 @@
           <!-- bounding boxes -->
           <rect
               v-if="store.state.tool === 'SELECT'"
-              :class="{hide: path.id !== store.state.selectedPathId}"
+              :class="{hide: (path.id !== store.state.selectedPathId) }"
               :x="path.bbox.x * scaleX" 
               :y="path.bbox.y * scaleY"
               :key="'bbox-' + path.id"
@@ -190,7 +190,8 @@ export default {
     zoom: function() {
       this.private.width = this.$refs.svg.clientWidth;
       this.private.height = this.$refs.svg.clientHeight;
-    }
+    },
+    
   },
   methods: {
     transform: function(path) {

@@ -1,26 +1,26 @@
-import Vue from 'vue';
-import createCircle from './shapes/createCircle';
-import createStar from './shapes/createStar';
-import { Path } from './classes/Path';
-import { initialState } from './initialState';
+import Vue from "vue";
+import createCircle from "./shapes/createCircle";
+import createStar from "./shapes/createStar";
+import { Path } from "./classes/Path";
+import { initialState } from "./initialState";
 
 // utilities & helpers
-import { roundPoint } from './util/roundPoint';
-import { createSVG } from './util/createSVG';
-import { exportSVG } from './util/exportSVG';
-import { polyfill } from './util/polyfill';
-import { clone } from './util/clone';
-import { cloneDeep } from 'lodash';
+import { roundPointToHalf } from "./util/roundPointToHalf";
+import { createSVG } from "./util/createSVG";
+import { exportSVG } from "./util/exportSVG";
+import { polyfill } from "./util/polyfill";
+import { clone } from "./util/clone";
+import { cloneDeep } from "lodash";
 
 polyfill();
 
 // define all Tools as Constants
 const TOOLS = {
-  PEN: 'PEN',
-  EDIT: 'EDIT',
-  SELECT: 'SELECT',
-  RECT: 'RECT',
-}
+  PEN: "PEN",
+  EDIT: "EDIT",
+  SELECT: "SELECT",
+  RECT: "RECT",
+};
 
 const HISTORY_MAX = 30;
 
@@ -56,8 +56,7 @@ const store = {
     if (this.debug) console.log("selectTool", tool);
     this.state.tool = tool;
 
-    if ((tool === TOOLS.PEN) ||
-        (tool === TOOLS.RECT)) {
+    if (tool === TOOLS.PEN || tool === TOOLS.RECT) {
       this.state.isFirstPoint = true;
     }
   },
@@ -78,56 +77,56 @@ const store = {
     if (domElement) {
       this.state.transformMatrix = domElement.getScreenCTM().inverse();
     }
-    this.state.svgPoint = document.querySelector('#app svg').createSVGPoint();
+    this.state.svgPoint = document.querySelector("#app svg").createSVGPoint();
 
     /* Tracking the point for path moving */
     let point = this.state.svgPoint;
     point.x = event.clientX;
     point.y = event.clientY;
     point = point.matrixTransform(this.state.transformMatrix);
-    if (this.state.snapToGrid) { point = roundPoint(point) }
+    if (this.state.snapToGrid) {
+      point = roundPointToHalf(point);
+    }
 
-    this.state.clientStartPos = {x: point.x, y: point.y};
-    
+    this.state.clientStartPos = { x: point.x, y: point.y };
+
     if (selectedPathIndex !== null) {
-      this.state.movePathStartPos = JSON.parse(JSON.stringify(this.getPath().definition));
+      this.state.movePathStartPos = JSON.parse(
+        JSON.stringify(this.getPath().definition)
+      );
       pathLength = this.getPath().definition.length;
 
       this.updateBBox();
     }
 
-    switch(this.state.tool) {   
+    switch (this.state.tool) {
       case TOOLS.PEN:
         this.state.isDrawing = true;
-        if( ((pathLength - 1) === selectedPointIndex)
-            && !this.state.isFirstPoint) {
-          if (this.debug) console.log('end')
+        if (pathLength - 1 === selectedPointIndex && !this.state.isFirstPoint) {
+          if (this.debug) console.log("end");
 
-          this.addSegment(event, 'END');
+          this.addSegment(event, "END");
+        } else if (selectedPointIndex === 0 && !this.state.isFirstPoint) {
+          if (this.debug) console.log("start");
 
-        } else if( (selectedPointIndex === 0)
-                    && !this.state.isFirstPoint) {
-          if (this.debug) console.log('start')
-
-          this.addSegment(event, 'START');
-
+          this.addSegment(event, "START");
         } else if (this.state.isFirstPoint) {
-          if (this.debug) console.log('new')
+          if (this.debug) console.log("new");
 
           this.createPath();
-          this.addSegment(event, 'NEW');
+          this.addSegment(event, "NEW");
         }
         break;
       case TOOLS.RECT:
         this.createPath();
 
         // Initialize the Segments
-        this.addSegment(event, 'NEW');
-        this.addSegment(event, 'END');
-        this.addSegment(event, 'END');
-        this.addSegment(event, 'END');
+        this.addSegment(event, "NEW");
+        this.addSegment(event, "END");
+        this.addSegment(event, "END");
+        this.addSegment(event, "END");
         // Back to the starting point
-        this.addSegment(event, 'END');
+        this.addSegment(event, "END");
         this.getPath().isClosed = true;
         this.state.isDrawing = true;
         break;
@@ -150,9 +149,14 @@ const store = {
       point.x = event.clientX;
       point.y = event.clientY;
       point = point.matrixTransform(this.state.transformMatrix);
-      if (this.state.snapToGrid) { point = roundPoint(point) }
+      if (this.state.snapToGrid) {
+        point = roundPointToHalf(point);
+      }
 
-      this.state.livePreviewSegment = {type: 'L', dest: {x: point.x, y: point.y}};
+      this.state.livePreviewSegment = {
+        type: "L",
+        dest: { x: point.x, y: point.y },
+      };
     }
 
     if (this.state.tool === TOOLS.PEN && this.state.isDrawing) {
@@ -171,7 +175,11 @@ const store = {
       this.movePath(event);
     }
 
-    if (this.state.tool === TOOLS.SELECT && this.state.isSelecting && !this.state.isMovingPath) {
+    if (
+      this.state.tool === TOOLS.SELECT &&
+      this.state.isSelecting &&
+      !this.state.isMovingPath
+    ) {
       this.drawSelectionRect(event);
     } else {
       this.state.isSelecting = false;
@@ -179,10 +187,18 @@ const store = {
   },
 
   handleMouseUp() {
-    let {selectedPathIndex, selectedPointIndex, multiSelectedPaths} = this.state;
+    let {
+      selectedPathIndex,
+      selectedPointIndex,
+      multiSelectedPaths,
+    } = this.state;
 
     /* if a point or path was moved add it to history */
-    if (this.state.isMovingPoint || this.state.isMovingPath || this.state.isDrawing) {
+    if (
+      this.state.isMovingPoint ||
+      this.state.isMovingPath ||
+      this.state.isDrawing
+    ) {
       this.historySnapshot();
     }
 
@@ -190,7 +206,7 @@ const store = {
     this.state.isMovingPath = false;
     this.state.isDrawing = false;
     this.state.selectionRect = {};
-    console.log('selectionRect is empty')
+    console.log("selectionRect is empty");
 
     // this should be set a bit later so the click event still knows that there was a selection
     setTimeout(() => {
@@ -201,7 +217,7 @@ const store = {
       this.updateBBox();
     }
 
-    for (let i = 0; i < multiSelectedPaths.length; i++ ) {
+    for (let i = 0; i < multiSelectedPaths.length; i++) {
       const pathIndex = multiSelectedPaths[i];
       this.getPath(pathIndex).updateBBox();
     }
@@ -209,24 +225,25 @@ const store = {
     if (selectedPathIndex !== null && selectedPointIndex !== null) {
       this.state.currentPoint = this.getSegment().dest;
     }
-
   },
 
   drawBezier(event) {
     let { selectedPathIndex, selectedPointIndex, snapToGrid } = this.state;
     let dest = this.getPath().definition[selectedPointIndex].dest;
     let oldCurve = {};
-  
+
     let point = this.state.svgPoint;
     point.x = event.clientX;
     point.y = event.clientY;
     point = point.matrixTransform(this.state.transformMatrix);
-    if (snapToGrid) { point = roundPoint(point); }
-  
+    if (snapToGrid) {
+      point = roundPointToHalf(point);
+    }
+
     // subtract the difference to have a more intuitive curve while drawing
     point.x = dest.x - (point.x - dest.x);
     point.y = dest.y - (point.y - dest.y);
-  
+
     if (selectedPointIndex === 0) {
       /* this is a bit confusing: as the new point is added at the beginning, the actual point is just a M (Moveto) Point with x,y coordinates.
        * So the origin is taken from the segment at index 1 and the curve is calculated from the segment at index 2 */
@@ -234,16 +251,16 @@ const store = {
       let from2 = this.getSegment(selectedPathIndex, 2);
       oldCurve.x = from.dest.x - (from2.curve1.x - from.dest.x) || from.dest.x;
       oldCurve.y = from.dest.y - (from2.curve1.y - from.dest.y) || from.dest.y;
-  
-      this.updateType('C', selectedPathIndex, 1);
+
+      this.updateType("C", selectedPathIndex, 1);
       this.updateCurve1({ x: point.x, y: point.y }, selectedPathIndex, 1);
       this.updateCurve2({ x: oldCurve.x, y: oldCurve.y }, selectedPathIndex, 1);
     } else {
       let from = this.getSegment(selectedPathIndex, selectedPointIndex - 1);
       oldCurve.x = from.dest.x - (from.curve2.x - from.dest.x) || from.dest.x;
       oldCurve.y = from.dest.y - (from.curve2.y - from.dest.y) || from.dest.y;
-  
-      this.updateType('C');
+
+      this.updateType("C");
       this.updateCurve1({ x: oldCurve.x, y: oldCurve.y });
       this.updateCurve2({ x: point.x, y: point.y });
     }
@@ -255,22 +272,24 @@ const store = {
     point.x = event.clientX;
     point.y = event.clientY;
     point = point.matrixTransform(this.state.transformMatrix);
-    if (snapToGrid) { point = roundPoint(point); }
+    if (snapToGrid) {
+      point = roundPointToHalf(point);
+    }
 
     let firstPoint = this.getSegment(selectedPathIndex, 0).dest;
-    // add Shift functionality 
+    // add Shift functionality
     if (event.shiftKey) {
-      console.log('shift');
+      console.log("shift");
       // make it dependant on x
       const dist = point.x - firstPoint.x;
       const correctedY = firstPoint.y + dist;
-      this.updateDest({x: firstPoint.x, y: correctedY}, selectedPathIndex, 1);
-      this.updateDest({x: point.x, y: correctedY}, selectedPathIndex, 2);
-      this.updateDest({x: point.x, y: firstPoint.y}, selectedPathIndex, 3);
+      this.updateDest({ x: firstPoint.x, y: correctedY }, selectedPathIndex, 1);
+      this.updateDest({ x: point.x, y: correctedY }, selectedPathIndex, 2);
+      this.updateDest({ x: point.x, y: firstPoint.y }, selectedPathIndex, 3);
     } else {
-      this.updateDest({x: firstPoint.x, y: point.y}, selectedPathIndex, 1);
-      this.updateDest({x: point.x, y: point.y}, selectedPathIndex, 2);
-      this.updateDest({x: point.x, y: firstPoint.y}, selectedPathIndex, 3);
+      this.updateDest({ x: firstPoint.x, y: point.y }, selectedPathIndex, 1);
+      this.updateDest({ x: point.x, y: point.y }, selectedPathIndex, 2);
+      this.updateDest({ x: point.x, y: firstPoint.y }, selectedPathIndex, 3);
     }
   },
 
@@ -284,7 +303,7 @@ const store = {
     const startPoint = this.state.clientStartPos;
     let width = point.x - startPoint.x;
     let height = point.y - startPoint.y;
-    let x = startPoint.x; 
+    let x = startPoint.x;
     let y = startPoint.y;
     if (width < 0) {
       width = Math.abs(width);
@@ -302,56 +321,70 @@ const store = {
       height,
     };
 
-    allPaths.forEach( (path, index) => {
+    allPaths.forEach((path, index) => {
       const RectA = {
         Left: selectionRect.x,
         Right: selectionRect.x + selectionRect.width,
         Top: selectionRect.y,
         Bottom: selectionRect.y + selectionRect.height,
-      }
+      };
       const RectB = {
         Left: path.bbox.x,
         Right: path.bbox.x + path.bbox.width,
         Top: path.bbox.y,
         Bottom: path.bbox.y + path.bbox.height,
+      };
+      if (
+        RectA.Left < RectB.Right &&
+        RectA.Right > RectB.Left &&
+        RectA.Bottom > RectB.Top &&
+        RectA.Top < RectB.Bottom
+      ) {
+        this.addToMultiSelect(index);
       }
-      if (RectA.Left < RectB.Right && RectA.Right > RectB.Left &&
-        RectA.Bottom > RectB.Top && RectA.Top < RectB.Bottom ) {
-          this.addToMultiSelect(index);
-      }
-    })
+    });
   },
 
   movePoint(event) {
-    const {selectedPathIndex, selectedPointIndex, selectedPointStep, movePathStartPos} = this.state;
-      let point = this.state.svgPoint;
-      point.x = event.clientX;
-      point.y = event.clientY;
-      point = point.matrixTransform(this.state.transformMatrix);
-      if (this.state.snapToGrid) { point = roundPoint(point) }
+    const {
+      selectedPathIndex,
+      selectedPointIndex,
+      selectedPointStep,
+      movePathStartPos,
+    } = this.state;
+    let point = this.state.svgPoint;
+    point.x = event.clientX;
+    point.y = event.clientY;
+    point = point.matrixTransform(this.state.transformMatrix);
+    if (this.state.snapToGrid) {
+      point = roundPointToHalf(point);
+    }
 
-      /* this moves the current selected point */
-      this.getSegment()[selectedPointStep] = {x: point.x, y: point.y};
+    /* this moves the current selected point */
+    this.getSegment()[selectedPointStep] = { x: point.x, y: point.y };
 
-      if ( (selectedPointStep === 'dest') && !event.altKey) {
-        /* move the curve handles together with the destination point (if ALT-key is not pressed) */
-        let diff = {};
-        const type = this.getSegment().type;
-        const nextSegment = this.getSegment(selectedPathIndex, selectedPointIndex + 1);
-        const nextType = nextSegment ? nextSegment.type : null;
-        diff.x = point.x - this.state.clientStartPos.x;
-        diff.y = point.y - this.state.clientStartPos.y;
-        if ( type === 'C') {
-          const x = movePathStartPos[selectedPointIndex].curve2.x + diff.x;
-          const y = movePathStartPos[selectedPointIndex].curve2.y + diff.y;
-          this.updateCurve2({x, y});
-        }
-        if (nextType === 'C') {
-          const x = movePathStartPos[selectedPointIndex + 1].curve1.x + diff.x;
-          const y = movePathStartPos[selectedPointIndex + 1].curve1.y + diff.y;
-          this.updateCurve1({x, y}, selectedPathIndex, selectedPointIndex + 1);
-        }
+    if (selectedPointStep === "dest" && !event.altKey) {
+      /* move the curve handles together with the destination point (if ALT-key is not pressed) */
+      let diff = {};
+      const type = this.getSegment().type;
+      const nextSegment = this.getSegment(
+        selectedPathIndex,
+        selectedPointIndex + 1
+      );
+      const nextType = nextSegment ? nextSegment.type : null;
+      diff.x = point.x - this.state.clientStartPos.x;
+      diff.y = point.y - this.state.clientStartPos.y;
+      if (type === "C") {
+        const x = movePathStartPos[selectedPointIndex].curve2.x + diff.x;
+        const y = movePathStartPos[selectedPointIndex].curve2.y + diff.y;
+        this.updateCurve2({ x, y });
       }
+      if (nextType === "C") {
+        const x = movePathStartPos[selectedPointIndex + 1].curve1.x + diff.x;
+        const y = movePathStartPos[selectedPointIndex + 1].curve1.y + diff.y;
+        this.updateCurve1({ x, y }, selectedPathIndex, selectedPointIndex + 1);
+      }
+    }
   },
 
   movePath(event) {
@@ -363,7 +396,9 @@ const store = {
     point.x = event.clientX;
     point.y = event.clientY;
     point = point.matrixTransform(this.state.transformMatrix);
-    if (this.state.snapToGrid) { point = roundPoint(point) }
+    if (this.state.snapToGrid) {
+      point = roundPointToHalf(point);
+    }
 
     diff.x = point.x - this.state.clientStartPos.x;
     diff.y = point.y - this.state.clientStartPos.y;
@@ -385,7 +420,7 @@ const store = {
     // px unit is relative to viewBox
     if (!path) return;
     path.definition.forEach((s) => {
-      if (s.type === 'Z') return;
+      if (s.type === "Z") return;
       s.dest.x += x;
       s.dest.y += y;
 
@@ -397,7 +432,7 @@ const store = {
         s.curve2.x += x;
         s.curve2.y += y;
       }
-    })
+    });
   },
 
   /* where = 'END' || 'START' || 'NEW' */
@@ -407,56 +442,60 @@ const store = {
     let { selectedPointIndex } = this.state;
 
     // create new SVG Point
-    let point = document.querySelector('#app svg').createSVGPoint();
+    let point = document.querySelector("#app svg").createSVGPoint();
     point.x = event.clientX;
     point.y = event.clientY;
     point = point.matrixTransform(this.state.transformMatrix);
-    if (this.state.snapToGrid) { point = roundPoint(point) }
+    if (this.state.snapToGrid) {
+      point = roundPointToHalf(point);
+    }
 
-    this.state.currentPoint = {x: point.x, y: point.y};
+    this.state.currentPoint = { x: point.x, y: point.y };
 
-    if (where === 'END') {
+    if (where === "END") {
       const id = this.getPath().addSegment({
-        type: 'L',
+        type: "L",
         dest: {
           x: point.x,
-          y: point.y
-        }
-      })
+          y: point.y,
+        },
+      });
       this.state.selectedPointId = id;
       this.state.selectedPointIndex++;
     }
-    if (where === 'START') {
+    if (where === "START") {
       const id = this.getPath().addSegmentAtStart({
-        type: 'M',
+        type: "M",
         dest: {
           x: point.x,
-          y: point.y
-        }
-      })
-      this.getPath().definition[selectedPointIndex + 1].type = 'L';
+          y: point.y,
+        },
+      });
+      this.getPath().definition[selectedPointIndex + 1].type = "L";
       this.state.selectedPointId = id;
       this.state.selectedPointIndex = 0;
     }
-    if ( where === 'NEW' ) {
+    if (where === "NEW") {
       const id = this.getPath().addSegment({
-        type: 'M',
+        type: "M",
         dest: {
           x: point.x,
-          y: point.y
-        }
-      })
+          y: point.y,
+        },
+      });
       this.state.isDrawing = false;
       this.state.selectedPointId = id;
       this.state.selectedPointIndex = 0;
-    } 
+    }
 
     this.state.isFirstPoint = false;
-    
+
     /* update bbox according to the new point */
     if (this.getPath().getDOMRef()) {
-      let bbox = this.getPath().getDOMRef().getBBox();
-      this.updateBBox()
+      let bbox = this.getPath()
+        .getDOMRef()
+        .getBBox();
+      this.updateBBox();
       this.updatePathCenter(bbox);
       this.updateRotationCenter();
     }
@@ -465,7 +504,7 @@ const store = {
   },
 
   continuePath(pathId, pathIndex, segmentId, segmentIndex) {
-    if (this.debug) console.log('continuePath');
+    if (this.debug) console.log("continuePath");
 
     this.state.selectedPathId = pathId;
     this.state.selectedPathIndex = pathIndex;
@@ -502,15 +541,13 @@ const store = {
     pathIndex = pathIndex || this.state.selectedPathIndex;
 
     if (segmentIndex !== null) {
-      if ( segmentIndex === 0 ) {
-
+      if (segmentIndex === 0) {
         if (this.getPath().definition.length > 1) {
           /* make the recent first point moveto ('M') instead of lineto ('L') */
-          this.updateType('M', pathIndex, 1);
+          this.updateType("M", pathIndex, 1);
           this.updateCurve1({}, pathIndex, 1);
           this.updateCurve2({}, pathIndex, 1);
         }
-        
       }
       this.getPath().definition.splice(this.state.selectedPointIndex, 1);
 
@@ -532,12 +569,15 @@ const store = {
       return;
     }
 
-    const newPathDefinition = this.getPath(pathIndex).definition.splice(0, segmentIndex);
+    const newPathDefinition = this.getPath(pathIndex).definition.splice(
+      0,
+      segmentIndex
+    );
     if (deleteSegment) {
       this.getPath(pathIndex).definition.shift();
     }
 
-    this.updateType('M', pathIndex, 0);
+    this.updateType("M", pathIndex, 0);
     this.updateCurve1({}, pathIndex, 0);
     this.updateCurve2({}, pathIndex, 0);
 
@@ -546,7 +586,7 @@ const store = {
     }
 
     if (newPathDefinition.length > 1) {
-      this.state.allPaths.push( new Path(newPathDefinition) );
+      this.state.allPaths.push(new Path(newPathDefinition));
     }
   },
 
@@ -562,17 +602,18 @@ const store = {
       this.state.selectedPathId = id;
       this.state.selectedPathIndex = index;
 
-      const isInMultiSelection = this.state.multiSelectedPaths.indexOf(index) >= 0;
+      const isInMultiSelection =
+        this.state.multiSelectedPaths.indexOf(index) >= 0;
       const hasMultiSelection = this.state.multiSelectedPaths.length > 1;
 
       if (!event.shiftKey && !isInMultiSelection && hasMultiSelection) {
-          this.state.multiSelectedPaths = [];
-          this.addToMultiSelect(index);
+        this.state.multiSelectedPaths = [];
+        this.addToMultiSelect(index);
       }
     }
 
     // multiselect
-    if (event.shiftKey) { 
+    if (event.shiftKey) {
       this.addToMultiSelect(index);
     }
 
@@ -582,13 +623,13 @@ const store = {
   addToMultiSelect(pathIndex) {
     if (this.state.multiSelectedPaths.indexOf(pathIndex) === -1) {
       this.state.multiSelectedPaths.push(pathIndex);
-      console.log('multi', this.state.multiSelectedPaths)
+      console.log("multi", this.state.multiSelectedPaths);
     }
   },
 
   unselectPath() {
     if (this.debug) console.log("unselectPath");
-    this.state.selectedPathId = null
+    this.state.selectedPathId = null;
     this.state.selectedPathIndex = null;
     this.state.multiSelectedPaths = [];
   },
@@ -604,58 +645,60 @@ const store = {
     this.state.isMovingPoint = true;
     this.state.selectedPointId = id;
     this.state.selectedPointStep = step;
-    this.state.selectedPointIndex = this.getPath().definition.findIndex(p => p.id === id);
-    this.state.svgPoint = document.querySelector('#app svg').createSVGPoint();
+    this.state.selectedPointIndex = this.getPath().definition.findIndex(
+      (p) => p.id === id
+    );
+    this.state.svgPoint = document.querySelector("#app svg").createSVGPoint();
     this.state.currentPoint = this.getSegment().dest;
   },
 
   getPath(pathIndex = this.state.selectedPathIndex) {
-    return this.state.allPaths[pathIndex]
+    return this.state.allPaths[pathIndex];
   },
 
   // TODO: use the word "segment" everywhere instead of "point" --> atm it's confusing
   getSegment(
     pathIndex = this.state.selectedPathIndex,
-    pointIndex = this.state.selectedPointIndex,
+    pointIndex = this.state.selectedPointIndex
   ) {
     return this.state.allPaths[pathIndex].definition[pointIndex];
   },
 
   updateType(
     segmentType,
-    pathIndex = this.state.selectedPathIndex, 
-    pointIndex = this.state.selectedPointIndex,
+    pathIndex = this.state.selectedPathIndex,
+    pointIndex = this.state.selectedPointIndex
   ) {
     this.state.allPaths[pathIndex].definition[pointIndex].type = segmentType;
   },
 
   updateCurve1(
     coordinates,
-    pathIndex = this.state.selectedPathIndex, 
-    pointIndex = this.state.selectedPointIndex,
+    pathIndex = this.state.selectedPathIndex,
+    pointIndex = this.state.selectedPointIndex
   ) {
     this.state.allPaths[pathIndex].definition[pointIndex].curve1 = coordinates;
   },
 
   updateCurve2(
     coordinates,
-    pathIndex = this.state.selectedPathIndex, 
-    pointIndex = this.state.selectedPointIndex,
+    pathIndex = this.state.selectedPathIndex,
+    pointIndex = this.state.selectedPointIndex
   ) {
     this.state.allPaths[pathIndex].definition[pointIndex].curve2 = coordinates;
   },
 
   updateDest(
     coordinates,
-    pathIndex = this.state.selectedPathIndex, 
-    pointIndex = this.state.selectedPointIndex,
+    pathIndex = this.state.selectedPathIndex,
+    pointIndex = this.state.selectedPointIndex
   ) {
     this.state.allPaths[pathIndex].definition[pointIndex].dest = coordinates;
   },
 
   addCircle(center, radius) {
     const d = createCircle(center, radius);
-    
+
     this.createPath();
     this.getPath().definition = d;
     this.getPath().isClosed = true;
@@ -664,7 +707,7 @@ const store = {
 
   addStar(center, outerRadius, innerRadius, arms) {
     const d = createStar(center, outerRadius, innerRadius, arms);
-    
+
     this.createPath();
     this.getPath().definition = d;
     this.getPath().isClosed = true;
@@ -672,10 +715,10 @@ const store = {
   },
 
   updateBBox(pathIndex) {
-    if (this.debug) console.log('updateBBox');
+    if (this.debug) console.log("updateBBox");
     pathIndex = pathIndex || this.state.selectedPathIndex;
-    const path = this.getPath(pathIndex)
-    if (path && (pathIndex !== undefined) ) {
+    const path = this.getPath(pathIndex);
+    if (path && pathIndex !== undefined) {
       path.updateBBox();
     }
   },
@@ -683,16 +726,19 @@ const store = {
   // TODO: get rid of this -> checkout where it is called
   updatePathCenter(bbox) {
     let center = {
-      x: bbox.x + bbox.width/2,
-      y: bbox.y + bbox.height/2
-    }
+      x: bbox.x + bbox.width / 2,
+      y: bbox.y + bbox.height / 2,
+    };
     this.getPath().center = center;
   },
 
   updateRotation(val) {
     this.getPath().rotation = val;
     this.updateRotationCenter();
-    this.state.transformMatrix = this.getPath().getDOMRef().getScreenCTM().inverse();
+    this.state.transformMatrix = this.getPath()
+      .getDOMRef()
+      .getScreenCTM()
+      .inverse();
   },
 
   updateRotationCenter() {
@@ -703,7 +749,10 @@ const store = {
 
   bakeRotation() {
     this.getPath().bakeRotation();
-    this.state.transformMatrix = this.getPath().getDOMRef().getScreenCTM().inverse();
+    this.state.transformMatrix = this.getPath()
+      .getDOMRef()
+      .getScreenCTM()
+      .inverse();
 
     this.updateBBox();
     this.historySnapshot();
@@ -712,7 +761,7 @@ const store = {
   updateScale(scaleX, scaleY, scalingCenter) {
     scalingCenter = scalingCenter || this.getPath().center;
     this.getPath().scalePath(scaleX, scaleY, scalingCenter);
-    
+
     // don't know what the following line did but i'll save it for now...
     // this.state.transformMatrix = this.getPath().getDOMRef().getScreenCTM().inverse();
   },
@@ -728,11 +777,11 @@ const store = {
     /* first reset the history position and clear all history arrays smaller then the current historyPos */
     if (this.state.historyPos > -1) {
       this.state.history.splice(0, this.state.historyPos + 1);
-      console.log('snapshot clear', this.state.history)
+      console.log("snapshot clear", this.state.history);
       this.state.historyPos = -1;
     }
 
-    if (this.state.history.length > (HISTORY_MAX - 1)) {
+    if (this.state.history.length > HISTORY_MAX - 1) {
       this.state.history.splice(-1, 1);
     }
 
@@ -746,11 +795,11 @@ const store = {
     this.state.historyPos += val;
   },
 
-  historyGoTo( count = 0 ) {
+  historyGoTo(count = 0) {
     if (this.debug) console.log("historyGoTo", count);
-    if (count >= (HISTORY_MAX - 1)) return;
-    if (count >= (this.state.history.length -1)) return;
-    Vue.set(this.state, 'allPaths', cloneDeep(this.state.history[count + 1]) );
+    if (count >= HISTORY_MAX - 1) return;
+    if (count >= this.state.history.length - 1) return;
+    Vue.set(this.state, "allPaths", cloneDeep(this.state.history[count + 1]));
 
     /* after time traveling selected elements have to be reset, because it is possible that they don't exist. */
     this.selectTool(this.state.tool);
@@ -799,14 +848,16 @@ const store = {
   },
 
   splitSegment(distance) {
-    if (this.debug) console.log('splitSegment', distance);
-    const {selectedPointIndex} = this.state;
+    if (this.debug) console.log("splitSegment", distance);
+    const { selectedPointIndex } = this.state;
     const id = this.getPath().splitSegment(selectedPointIndex, distance);
 
     this.state.selectedPointId = id;
     this.state.selectedPointIndex = selectedPointIndex + 1;
 
-    this.state.currentPoint = this.getPath().definition[selectedPointIndex + 1].dest;
+    this.state.currentPoint = this.getPath().definition[
+      selectedPointIndex + 1
+    ].dest;
   },
 
   createSVG() {
@@ -817,7 +868,7 @@ const store = {
   exportSVG() {
     /* this actually doesn't store anything inside the state */
     exportSVG();
-  }
+  },
 };
 
 export default store;
